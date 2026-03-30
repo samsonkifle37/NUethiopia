@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  passwordHash  String
+  roles         String[]   @default(["traveller"])
+  languages     String[]   @default(["en"])
+  bio           String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  favorites     Favorite[]
+  reviews       Review[]
+  ownerClaims   OwnerClaim[]
+  visits        PlaceVisit[]
+}
+
+model Place {
+  id               String       @id @default(uuid())
+  type             String       // hotel, guesthouse, apartment, tour, restaurant, club, resort
+  name             String
+  slug             String       @unique
+  shortDescription String?
+  longDescription  String?
+  city             String
+  area             String       @default("")
+  country          String       @default("Ethiopia")
+  latitude         Float?
+  longitude        Float?
+  websiteUrl       String?
+  bookingUrl       String?
+  googleMapsUrl    String?
+  phone            String?
+  email            String?
+  tags             String[]     @default([])
+  source           String       @default("manual-seed")
+  status           String       @default("APPROVED")
+  priceLevel       String?
+  neighborhood     String?
+  featured         Boolean      @default(false)
+  isActive         Boolean      @default(true)
+  
+  // Pipeline Enrichment Fields
+  verificationLevel Int         @default(30)
+  verificationScore Int         @default(30)
+  visualScore       Int         @default(0)
+  claimable         Boolean     @default(true)
+  brandName         String?
+  subcategory       String?
+  district          String?
+  fullAddress       String?
+  whatsapp          String?
+  openingHours      Json?
+  currency          String      @default("ETB")
+  reviewCount       Int         @default(0)
+  sourceCount       Int         @default(0)
+  bookingLink       String?
+  socialLinks       Json?
+  highlights        String[]    @default([])
+  amenities         String[]    @default([])
+  ownerVerified     Boolean     @default(false)
+  ownerId           String?
+  claimedAt         DateTime?
+  lastCheckedAt     DateTime?
+  
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  images           PlaceImage[]
+  favorites        Favorite[]
+  reviews          Review[]
+  hostListings     HostListing[]
+  imageErrors      PlaceImageError[]
+  ownerClaims      OwnerClaim[]
+  ingestionListing IngestionListing?
+  visits           PlaceVisit[]
+  
+  placeSources     PlaceSource[]
+  verificationLogs VerificationLog[]
+}
+
+model PlaceSource {
+  id              String   @id @default(uuid())
+  placeId         String
+  url             String
+  sourceName      String   // booking, google, tripadvisor, official, wikimedia
+  sourceType      String   // Tier A, Tier B, Tier C
+  rawJson         Json?
+  scrapedAt       DateTime @default(now())
+  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([placeId, url])
+}
+
+model VerificationLog {
+  id              String   @id @default(uuid())
+  placeId         String
+  scoreChange     Int
+  reason          String
+  newScore        Int
+  createdAt       DateTime @default(now())
+  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model DuplicateCandidate {
+  id              String   @id @default(uuid())
+  masterPlaceId   String
+  duplicateId     String
+  similarityScore Int
+  status          String   @default("PENDING") // MERGED, REJECTED
+  createdAt       DateTime @default(now())
+}
+
+
+model PlaceImage {
+  id            String    @id @default(uuid())
+  placeId       String
+  place         Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  imageUrl      String
+  imageSource   String?   // official, wikimedia, tripadvisor, maps, unsplash
+  sourcePageUrl String?   // the page where the image was found
+  altText       String?
+  priority      Int       @default(0)  // 0 = hero, higher = gallery
+  createdAt     DateTime  @default(now())
+  verifiedAt    DateTime?
+
+  // Pipeline Quality Fields
+  status          String    @default("PENDING") // PENDING, APPROVED, REJECTED, FAILED
+  qualityScore    Int       @default(0)
+  isMirrored      Boolean   @default(false)
+  mirroredUrl     String?
+  width           Int?
+  height          Int?
+  hash            String?   
+  labels          String[]  @default([])
+  rejectionReason String?
+
+  imageTruthType  String    @default("place_real") // place_real, representative, placeholder
+}
+
+model PlaceImageError {
+  id        String   @id @default(uuid())
+  placeId   String
+  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  errorType String   @default("404")
+  createdAt DateTime @default(now())
+}
+
+model ImageAudit {
+  id              String   @id @default(uuid())
+  entityType      String   // place, stay, tour, dining, nightlife
+  entityId        String
+  name            String
+  imageUrl        String?
+  status          String   @default("pending") // ok, missing, broken, blocked, not_image, too_small
+  httpCode        Int?
+  notes           String?
+  source          String?  // official, wikimedia, tripadvisor, maps, unsplash
+  sourcePageUrl   String?
+  dimensions      String?  // e.g. 1920x1080
+  checkedAt       DateTime @default(now())
+  verifiedAt      DateTime?
+
+  @@index([status])
+  @@index([entityType, entityId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  placeId   String
+  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int      // 1-5
+  title     String?
+  body      String?
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placeId   String
+  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, placeId])
+}
+
+// ── Host Listing (Become a Host) ────────────
+enum HostListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum HostPlaceType {
+  APARTMENT
+  GUESTHOUSE
+  ENTIRE_HOME
+  PRIVATE_ROOM
+  SHARED_ROOM
+}
+
+model HostListing {
+  id               String            @id @default(uuid())
+  status           HostListingStatus @default(PENDING)
+  placeType        HostPlaceType
+  title            String
+  description      String
+  city             String
+  area             String            @default("")
+  country          String            @default("Ethiopia")
+  maxGuests        Int
+  bedrooms         Int
+  beds             Int
+  bathrooms        Int
+  pricePerNight    Float
+  amenities        String[]          @default([])
+  hostName         String
+  hostEmail        String
+  hostPhone        String
+  rejectionReason  String?
+  approvedByUserId String?
+  approvedAt       DateTime?
+  linkedPlaceId    String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  images           HostListingImage[]
+  linkedPlace      Place?            @relation(fields: [linkedPlaceId], references: [id])
+
+  @@index([status])
+}
+
+model HostListingImage {
+  id             String      @id @default(uuid())
+  hostListingId  String
+  hostListing    HostListing @relation(fields: [hostListingId], references: [id], onDelete: Cascade)
+  imageUrl       String
+  altText        String?
+  createdAt      DateTime    @default(now())
+}
+
+// ── Ingestion Foundry (Listing Factory) ────────────
+enum IngestionStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  REJECTED
+}
+
+model IngestionListing {
+  id                String          @id @default(uuid())
+  name              String
+  slug              String          @unique
+  category          String
+  subcategory       String?
+  city              String
+  district          String?
+  country           String          @default("Ethiopia")
+  lat               Float?
+  lng               Float?
+  address           String?
+  website           String?
+  phone             String?
+  sourceSummary     Json?
+  shortDescription  String?
+  longDescription   String?
+  tags              String[]        @default([])
+  seoTitle          String?
+  seoDescription    String?
+  imageUrls         String[]        @default([])
+  confidenceScore   Float           @default(0.0)
+  status            IngestionStatus @default(DRAFT)
+  
+  sourceProvenance  Json?
+  
+  placeId           String?         @unique
+  place             Place?          @relation(fields: [placeId], references: [id])
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  lastRefreshAt     DateTime?
+}
+
+// ── Owner Claim + Photo Upload ────────────
+model OwnerClaim {
+  id              String   @id @default(uuid())
+  placeId         String
+  userId          String?
+  fullName        String
+  email           String
+  phone           String
+  relationship    String   @default("owner")
+  proofNote       String?
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, NEEDS_REVIEW
+  submittedAt     DateTime @default(now())
+  resolvedAt      DateTime?
+  
+  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([placeId])
+  @@index([status])
+}
+
+// ✈️ Check-In Journal ━━━━━━━━━━━━━━━━━━━━━━━━━━
+model PlaceVisit {
+  id          String    @id @default(uuid())
+  userId      String
+  placeId     String
+  visitedAt   DateTime  @default(now())
+  note        String?   // optional journal note
+  rating      Int?      // optional 1-5 quick rating
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place       Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([placeId])
+}
