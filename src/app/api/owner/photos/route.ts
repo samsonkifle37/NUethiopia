@@ -1,14 +1,17 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import prisma from "@/lib/prisma";
 import { getCdnUrl } from "@/lib/images";
 
-// Service-role Supabase client for storage uploads
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-);
+// Service-role Supabase client for storage uploads (initialized lazily)
+const getSupabase = () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+        throw new Error("Supabase environment variables missing");
+    }
+    return createClient(url, key, { auth: { persistSession: false } });
+};
 
 const BUCKET = "place-images";
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB
@@ -84,7 +87,7 @@ export async function POST(request: NextRequest) {
             const path = `${placeId}/owner_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
             const buffer = Buffer.from(await file.arrayBuffer());
 
-            const { error: uploadError } = await supabase.storage
+            const { error: uploadError } = await getSupabase().storage
                 .from(BUCKET)
                 .upload(path, buffer, {
                     contentType: file.type,
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
                 continue;
             }
 
-            const { data: { publicUrl } } = supabase.storage
+            const { data: { publicUrl } } = getSupabase().storage
                 .from(BUCKET)
                 .getPublicUrl(path);
 
