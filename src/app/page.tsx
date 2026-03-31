@@ -106,7 +106,6 @@ function HeroSection() {
   const [prompt, setPrompt] = useState("");
 
 
-
   const suggestions = [
 
     "3 days in Addis with coffee tours",
@@ -219,11 +218,11 @@ function HeroSection() {
 
             {suggestions.map((sug) => (
 
-                <button 
+                <Link
 
                   key={sug}
 
-                  onClick={() => setPrompt(sug)}
+                  href={`/plan?q=${encodeURIComponent(sug)}`}
 
                   className="bg-white/5 hover:bg-[#D4AF37]/20 border border-white/10 hover:border-[#D4AF37]/50 text-gray-300 hover:text-white px-3 py-1.5 rounded-full text-[10px] font-medium transition-all"
 
@@ -231,7 +230,7 @@ function HeroSection() {
 
                     {sug}
 
-                </button>
+                </Link>
 
             ))}
 
