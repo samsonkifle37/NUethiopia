@@ -2,7 +2,7 @@ export const translations = {
   en: {
     nav: {
       home: "Home", stays: "Stays", tours: "Tours",
-      dining: "Dining", transport: "Transport", profile: "Profile",
+      dining: "Dining", transport: "Transport", itineraries: "Plans", favorites: "Favorites", profile: "Profile",
     },
     home: {
       tagline: "Come Discover Ethiopia",
@@ -59,7 +59,7 @@ export const translations = {
   am: {
     nav: {
       home: "መነሻ", stays: "ማረፊያ", tours: "ጉብኝቶች",
-      dining: "ምግብ ቤቶች", transport: "ትራንስፖርት", profile: "መገለጫ",
+      dining: "ምግብ ቤቶች", transport: "ትራንስፖርት", itineraries: "መርሃግብር", favorites: "ተወዳጆች", profile: "መገለጫ",
     },
     home: {
       tagline: "ኢትዮጵያን ያስሱ",

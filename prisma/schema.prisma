@@ -7,19 +7,21 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(uuid())
-  name          String
-  email         String     @unique
-  passwordHash  String
-  roles         String[]   @default(["traveller"])
-  languages     String[]   @default(["en"])
-  bio           String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  favorites     Favorite[]
-  reviews       Review[]
-  ownerClaims   OwnerClaim[]
-  visits        PlaceVisit[]
+  id                  String                 @id @default(uuid())
+  name                String
+  email               String                 @unique
+  passwordHash        String
+  roles               String[]               @default(["traveller"])
+  languages           String[]               @default(["en"])
+  bio                 String?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  favorites           Favorite[]
+  reviews             Review[]
+  ownerClaims         OwnerClaim[]
+  visits              PlaceVisit[]
+  favoriteCollections FavoriteCollection[]
+  itineraries         Itinerary[]
 }
 
 model Place {
@@ -70,19 +72,20 @@ model Place {
   claimedAt         DateTime?
   lastCheckedAt     DateTime?
   
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  images           PlaceImage[]
-  favorites        Favorite[]
-  reviews          Review[]
-  hostListings     HostListing[]
-  imageErrors      PlaceImageError[]
-  ownerClaims      OwnerClaim[]
-  ingestionListing IngestionListing?
-  visits           PlaceVisit[]
-  
-  placeSources     PlaceSource[]
-  verificationLogs VerificationLog[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  images              PlaceImage[]
+  favorites           Favorite[]
+  reviews             Review[]
+  hostListings        HostListing[]
+  imageErrors         PlaceImageError[]
+  ownerClaims         OwnerClaim[]
+  ingestionListing    IngestionListing?
+  visits              PlaceVisit[]
+  itineraryActivities ItineraryActivity[]
+
+  placeSources        PlaceSource[]
+  verificationLogs    VerificationLog[]
 }
 
 model PlaceSource {
@@ -185,12 +188,13 @@ model Review {
 }
 
 model Favorite {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  placeId   String
-  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id           String                    @id @default(uuid())
+  userId       String
+  user         User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placeId      String
+  place        Place                     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  createdAt    DateTime                  @default(now())
+  collections  FavoriteInCollection[]
 
   @@unique([userId, placeId])
 }
@@ -327,4 +331,105 @@ model PlaceVisit {
 
   @@index([userId])
   @@index([placeId])
+}
+
+// ── User Collections (Favorites Organization) ────────────
+model FavoriteCollection {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  emoji       String?
+  color       String?
+  isDefault   Boolean    @default(false)
+  favorites   FavoriteInCollection[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model FavoriteInCollection {
+  id           String                @id @default(uuid())
+  collectionId String
+  collection   FavoriteCollection    @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  favoriteId   String
+  favorite     Favorite              @relation(fields: [favoriteId], references: [id], onDelete: Cascade)
+  orderIndex   Int                   @default(0)
+  addedAt      DateTime              @default(now())
+
+  @@unique([collectionId, favoriteId])
+  @@index([collectionId])
+  @@index([favoriteId])
+}
+
+// ── Itinerary System (Trip Planning) ────────────
+model Itinerary {
+  id              String            @id @default(uuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  city            String
+  startDate       DateTime?
+  endDate         DateTime?
+  durationDays    Int               @default(3)
+  isPublished     Boolean           @default(false)
+  days            ItineraryDay[]
+  shareLink       ItineraryShare?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([isPublished])
+}
+
+model ItineraryDay {
+  id            String       @id @default(uuid())
+  itineraryId   String
+  itinerary     Itinerary    @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  dayNumber     Int
+  title         String?
+  description   String?
+  activities    ItineraryActivity[]
+  orderIndex    Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([itineraryId, dayNumber])
+  @@index([itineraryId])
+}
+
+model ItineraryActivity {
+  id          String        @id @default(uuid())
+  dayId       String
+  day         ItineraryDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  placeId     String
+  place       Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  timeSlot    String?
+  notes       String?
+  orderIndex  Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([dayId])
+  @@index([placeId])
+}
+
+model ItineraryShare {
+  id            String      @id @default(uuid())
+  itineraryId   String      @unique
+  itinerary     Itinerary   @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  shareToken    String      @unique @default(cuid())
+  isPublic      Boolean     @default(true)
+  expiresAt     DateTime?
+  viewCount     Int         @default(0)
+  lastViewedAt  DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([shareToken])
+  @@index([itineraryId])
 }

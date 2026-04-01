@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BedDouble, Map, Car, User, UtensilsCrossed } from "lucide-react";
+import { Home, BedDouble, Map, Car, User, UtensilsCrossed, Heart, Briefcase } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const NAV_KEYS = [
-  { href: "/",          icon: Home,            key: "home"      },
-  { href: "/stays",     icon: BedDouble,       key: "stays"     },
-  { href: "/tours",     icon: Map,             key: "tours"     },
-  { href: "/dining",    icon: UtensilsCrossed, key: "dining"    },
-  { href: "/transport", icon: Car,             key: "transport" },
-  { href: "/profile",   icon: User,            key: "profile"   },
+  { href: "/",            icon: Home,            key: "home"        },
+  { href: "/stays",       icon: BedDouble,       key: "stays"       },
+  { href: "/tours",       icon: Map,             key: "tours"       },
+  { href: "/dining",      icon: UtensilsCrossed, key: "dining"      },
+  { href: "/transport",   icon: Car,             key: "transport"   },
+  { href: "/itineraries", icon: Briefcase,       key: "itineraries" },
+  { href: "/favorites",   icon: Heart,           key: "favorites"   },
+  { href: "/profile",     icon: User,            key: "profile"     },
 ];
 
 export function BottomNav() {
