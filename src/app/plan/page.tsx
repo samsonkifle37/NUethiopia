@@ -257,21 +257,30 @@ function PlanPageContent() {
   const [result, setResult] = useState<PlannerResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [showAssumptionsEditor, setShowAssumptionsEditor] = useState(false);
+  const [manualOverrides, setManualOverrides] = useState({
+    days: 3,
+    budget: "mid-range",
+    pace: "balanced",
+    groupType: "solo",
+  });
+
   useEffect(() => {
     if (q) handleGenerate(q);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  const handleGenerate = async (searchQuery: string) => {
+  const handleGenerate = async (searchQuery: string, overrides: any = {}) => {
     if (!searchQuery.trim()) return;
     setLoading(true);
     setError(null);
     setResult(null);
     try {
+      const payload = { query: searchQuery, ...overrides };
       const res = await fetch("/api/ai/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Server error");
       const data: PlannerResponse = await res.json();
@@ -398,13 +407,76 @@ function PlanPageContent() {
               {/* Assumptions */}
               {result.tripSummary.assumptions.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Assumptions</p>
-                  {result.tripSummary.assumptions.map((a, i) => (
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Assumptions</p>
+                    <button 
+                      onClick={() => {
+                        setManualOverrides({
+                          days: result.tripSummary.days || 3,
+                          budget: result.tripSummary.budget || "mid-range",
+                          pace: "balanced",
+                          groupType: "solo"
+                        });
+                        setShowAssumptionsEditor(!showAssumptionsEditor);
+                      }}
+                      className="text-[9px] font-bold text-[#C9973B] uppercase tracking-widest hover:underline"
+                    >
+                      {showAssumptionsEditor ? "Cancel" : "Change"}
+                    </button>
+                  </div>
+                  {!showAssumptionsEditor && result.tripSummary.assumptions.map((a, i) => (
                     <div key={i} className="flex items-start gap-1.5 mt-1">
                       <Info className="w-3 h-3 text-gray-300 shrink-0 mt-0.5" />
                       <p className="text-[10px] text-gray-500 font-medium">{a}</p>
                     </div>
                   ))}
+
+                  {/* Settings Editor Form */}
+                  {showAssumptionsEditor && (
+                    <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                          <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-1">Duration (Days)</label>
+                          <input type="number" min="1" max="14" value={manualOverrides.days} onChange={e => setManualOverrides({...manualOverrides, days: parseInt(e.target.value) || 1 })} className="w-full p-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-[#C9973B] focus:ring-1 focus:ring-[#C9973B]" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-1">Budget</label>
+                          <select value={manualOverrides.budget} onChange={e => setManualOverrides({...manualOverrides, budget: e.target.value})} className="w-full p-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-[#C9973B] focus:ring-1 focus:ring-[#C9973B]">
+                            <option value="budget">Backpacker</option>
+                            <option value="mid-range">Mid-range</option>
+                            <option value="luxury">Luxury</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-1">Pace</label>
+                          <select value={manualOverrides.pace} onChange={e => setManualOverrides({...manualOverrides, pace: e.target.value})} className="w-full p-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-[#C9973B] focus:ring-1 focus:ring-[#C9973B]">
+                            <option value="slow">Relaxed</option>
+                            <option value="balanced">Balanced</option>
+                            <option value="packed">Action-packed</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-1">Group</label>
+                          <select value={manualOverrides.groupType} onChange={e => setManualOverrides({...manualOverrides, groupType: e.target.value})} className="w-full p-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-[#C9973B] focus:ring-1 focus:ring-[#C9973B]">
+                            <option value="solo">Solo</option>
+                            <option value="couple">Couple</option>
+                            <option value="friends">Friends</option>
+                            <option value="family">Family</option>
+                          </select>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          setShowAssumptionsEditor(false);
+                          handleGenerate(query, manualOverrides);
+                        }}
+                        className="w-full py-2.5 bg-[#1A1612] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Apply & Re-plan
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
