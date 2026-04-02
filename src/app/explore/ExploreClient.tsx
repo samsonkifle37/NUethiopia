@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, Filter, Map, Link as LinkIcon, Share2, Navigation } from "lucide-react";
 import Link from "next/link";
 import { VerifiedImage } from "@/components/media/VerifiedImage";
@@ -20,6 +21,7 @@ interface Place {
 }
 
 export function ExploreClient() {
+    const searchParams = useSearchParams();
     const [places, setPlaces] = useState<Place[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -40,8 +42,19 @@ export function ExploreClient() {
         { id: "tour_operator", label: "Operators" }
     ];
 
+    // Read query parameter from URL on component mount
     useEffect(() => {
-        fetch("/api/places/explore")
+        const q = searchParams.get("q");
+        if (q) {
+            setSearchQuery(q);
+        }
+    }, [searchParams]);
+
+    // Fetch places
+    useEffect(() => {
+        fetch("/api/places/explore", {
+            credentials: "include",
+        })
             .then(res => res.json())
             .then(data => {
                 setPlaces(data.places || []);

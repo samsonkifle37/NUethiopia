@@ -112,7 +112,7 @@ function HeroSection() {
 
     "Hidden restaurants in Addis",
 
-    "Weekend in Lalibela",
+    "Must-see places in Addis Ababa",
 
     "Ethiopia historical route"
 
@@ -758,27 +758,18 @@ function AiRecommendations() {
 
 
 function ThisWeekInAddis() {
-  // Ethiopian months & seasonal tips
-  const ethiopianMonths: Record<number, { name: string; season: string; tip: string }> = {
-    1:  { name: "Meskerem", season: "Spring", tip: "New Year celebrations just ended — explore festival venues." },
-    2:  { name: "Tikimt",   season: "Post-rain", tip: "Perfect weather for outdoor dining and walking tours." },
-    3:  { name: "Hidar",    season: "Dry season", tip: "Clear skies — ideal for Entoto Mountain hikes." },
-    4:  { name: "Tahsas",   season: "Cool & dry", tip: "Christmas (Genna) preparations — visit churches." },
-    5:  { name: "Tir",      season: "Dry season", tip: "Timkat (Epiphany) — the biggest festival of the year!" },
-    6:  { name: "Yekatit",  season: "Warm & dry", tip: "Coffee harvest season — perfect for coffee tours." },
-    7:  { name: "Megabit",  season: "Pre-rain",   tip: "Warm days, cool nights — great patio weather." },
-    8:  { name: "Miazya",   season: "Small rains", tip: "Fasika (Easter) celebrations — incredible church ceremonies." },
-    9:  { name: "Ginbot",   season: "Pre-summer",  tip: "Markets are lively — visit Mercato and Shola Market." },
-    10: { name: "Sene",     season: "Early rains",  tip: "Lush green hills — beautiful scenic drives." },
-    11: { name: "Hamle",    season: "Rainy season", tip: "Cozy cafés and indoor cultural shows." },
-    12: { name: "Nehase",   season: "Rainy season", tip: "Perfect for museum visits and injera cooking classes." },
-    13: { name: "Pagume",   season: "Transition",   tip: "Last days before Ethiopian New Year — gift shopping!" },
+  const { data, isLoading } = useQuery({
+    queryKey: ["this-week"],
+    queryFn: async () => {
+      const res = await fetch("/api/this-week");
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    }
+  });
+
+  const getDayName = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", { weekday: "short" });
   };
-  const now = new Date();
-  const gregMonth = now.getMonth(); // 0-indexed
-  // Rough Gregorian → Ethiopian month mapping
-  const ethMonthNum = ((gregMonth + 4) % 13) + 1; // approximate
-  const ethMonth = ethiopianMonths[Math.min(ethMonthNum, 13)] || ethiopianMonths[1];
 
   const editorialPicks = [
     { emoji: "☕", title: "Coffee Ceremony 101", desc: "Experience Ethiopia's most sacred daily ritual.", link: "/coffee-passport", color: "from-amber-500 to-orange-600" },
@@ -789,20 +780,53 @@ function ThisWeekInAddis() {
 
   return (
     <div className="py-8 space-y-5">
-      {/* Ethiopian calendar awareness */}
+      {/* Dynamic This Week & Weather */}
       <div className="bg-gradient-to-r from-[#1A1612] to-[#2A2A3A] rounded-2xl p-5 text-white">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-2xl">🗓️</span>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-3xl">🗓️</span>
           <div>
             <h2 className="text-sm font-black uppercase tracking-widest text-[#C9973B]">This Week in Addis</h2>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{ethMonth.name} — {ethMonth.season}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Live Weather & Events</p>
           </div>
         </div>
-        <p className="text-sm text-gray-300 font-medium leading-relaxed">{ethMonth.tip}</p>
+
+        {/* Weather Forecast */}
+        {!isLoading && data?.weather && (
+          <div className="grid grid-cols-3 gap-2 mb-5">
+            {data.weather.map((w: any, i: number) => (
+              <div key={i} className="bg-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
+                <span className="text-[9px] font-bold text-[#E8C07A] uppercase">{i === 0 ? "Today" : getDayName(w.date)}</span>
+                <span className="text-xl my-1">{w.icon}</span>
+                <span className="text-[10px] font-black">{w.max}° <span className="text-gray-500 font-medium">/ {w.min}°</span></span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Dynamic Events */}
+        {isLoading ? (
+          <div className="space-y-4 animate-pulse pt-2">
+             <div className="h-4 bg-white/10 rounded-full w-3/4"></div>
+             <div className="h-4 bg-white/10 rounded-full w-1/2"></div>
+             <div className="h-4 bg-white/10 rounded-full w-5/6"></div>
+          </div>
+        ) : data?.events ? (
+          <div className="space-y-4">
+             {data.events.map((ev: any, i: number) => (
+               <div key={i} className="flex gap-3 items-start border-t border-white/5 pt-3 first:border-0 first:pt-0">
+                 <span className="text-xl mt-0.5 bg-white/5 w-8 h-8 rounded-full flex items-center justify-center shrink-0">{ev.icon}</span>
+                 <div>
+                   <h3 className="text-sm font-bold text-white leading-tight">{ev.title}</h3>
+                   <p className="text-[11px] text-gray-400 mt-1 leading-snug">{ev.desc}</p>
+                 </div>
+               </div>
+             ))}
+          </div>
+        ) : null}
       </div>
 
       {/* Editorial picks — horizontal scroll */}
-      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 px-1">
         {editorialPicks.map((pick, i) => (
           <Link
             key={i}
@@ -832,11 +856,11 @@ export default function HomePage() {
 
       
 
-      <CategorySection />
+      <AirportUtilityCard />
 
       
 
-      <AirportUtilityCard />
+      <CategorySection />
 
       <ThisWeekInAddis />
 

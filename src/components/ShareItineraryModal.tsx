@@ -7,18 +7,18 @@ import {
   useShareLink,
   useDeleteShareLink,
 } from "@/hooks/useItineraries";
-import QRCode from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 
 interface ShareItineraryModalProps {
   itineraryId: string;
   itineraryTitle: string;
-  onClose: () => void;
+  onCloseAction: () => void;
 }
 
 export function ShareItineraryModal({
   itineraryId,
   itineraryTitle,
-  onClose,
+  onCloseAction,
 }: ShareItineraryModalProps) {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -34,7 +34,7 @@ export function ShareItineraryModal({
     : null;
 
   const handleCreateShare = () => {
-    let expiresAt = null;
+    let expiresAt: string | undefined = undefined;
     if (expiresIn !== "none") {
       const date = new Date();
       date.setDate(date.getDate() + parseInt(expiresIn));
@@ -85,7 +85,7 @@ export function ShareItineraryModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onCloseAction} />
 
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl z-50 w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
@@ -95,7 +95,7 @@ export function ShareItineraryModal({
             Share Itinerary
           </h2>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
           >
             ✕
@@ -216,7 +216,7 @@ export function ShareItineraryModal({
 
               {showQR && (
                 <div className="mt-4 flex justify-center p-4 bg-gray-50 rounded-lg">
-                  <QRCode
+                  <QRCodeCanvas
                     value={shareUrl || ""}
                     size={200}
                     level="H"

@@ -273,12 +273,16 @@ export default function PlaceDetailPage() {
             const res = await fetch(`/api/places/${slug}/reviews`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({ rating, comment: reviewComment }),
             });
             if (res.ok) {
                 setRating(0);
                 setReviewComment("");
                 queryClient.invalidateQueries({ queryKey: ["place", slug] });
+            } else if (res.status === 401) {
+                alert("Please sign in to post a review.");
+                // Could redirect to sign in here if needed
             } else {
                 alert("Failed to post review. Please try again.");
             }

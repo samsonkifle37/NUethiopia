@@ -17,15 +17,6 @@ export default function DiningPage() {
                 { value: "club", label: "Nightlife" },
             ]}
             searchPlaceholder="Bole, restaurants, coffee..."
-            areaOptions={[
-                { value: "Bole", label: "Bole", emoji: "🏙️ " },
-                { value: "Kazanchis", label: "Kazanchis", emoji: "🏨 " },
-                { value: "Piazza", label: "Piazza", emoji: "🕌 " },
-                { value: "Kirkos", label: "Kirkos", emoji: "🌆 " },
-                { value: "Sarbet", label: "Sarbet", emoji: "🌿 " },
-                { value: "Arat Kilo", label: "Arat Kilo", emoji: "🏛️ " },
-                { value: "Mercato", label: "Mercato", emoji: "🛍️ " },
-            ]}
             accentColor="ethiopia-red"
         />
     );

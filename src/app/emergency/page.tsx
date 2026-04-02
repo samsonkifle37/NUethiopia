@@ -25,8 +25,7 @@ export default function EmergencyPage() {
 
   const openHospitalMap = () =>
     window.open("https://maps.google.com?q=hospitals+near+me+Addis+Ababa", "_blank");
-  const openWhatsApp = () =>
-    window.open("https://wa.me/251900000000?text=Hi%2C%20I%20need%20help%20with%20my%20NU%20app%20trip", "_blank");
+
 
   return (
     <div className="space-y-6 pt-4 pb-24 px-1">
@@ -99,19 +98,6 @@ export default function EmergencyPage() {
         </div>
       </section>
 
-      {/* NU Support */}
-      <section>
-        <button onClick={openWhatsApp}
-          className="w-full bg-[#25D366] text-white rounded-2xl p-5 flex items-center gap-4 hover:opacity-90 active:scale-95 transition-all">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-            <MessageCircle className="w-6 h-6" />
-          </div>
-          <div className="text-left">
-            <p className="font-black text-base">{tr("emergency","nuSupport")}</p>
-            <p className="text-white/70 text-xs">{tr("emergency","nuSupportDesc")}</p>
-          </div>
-        </button>
-      </section>
     </div>
   );
 }

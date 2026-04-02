@@ -31,69 +31,31 @@ import {
 
 
     ShieldAlert,
-
-
-
     User,
-
-
-
     Heart,
-
-
-
     Settings,
-
-
-
     LogIn,
-
-
-
     LogOut,
-
-
-
     Sparkles,
-
-
-
     ArrowRight,
-
-
-
     MapPin,
-
-
-
     X,
-
-
-
     Mail,
-
-
-
     Lock,
-
-
-
     UserPlus,
-
-
-
     Loader2,
-
-
-
     Trash2,
-
-
-
     Send,
-
-
-
+    FolderHeart,
+    Map,
+    Share2,
+    Plus,
+    Check,
+    Copy,
+    Globe,
+    Calendar,
+    Edit,
+    Eye,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -327,7 +289,7 @@ function AuthModal({ onClose }: { onClose: () => void }) {
 
 
 
-                            ? tr("profile","signInSaved")
+                            ? "Sign in to access your saved places & itineraries"
 
 
 
@@ -792,9 +754,7 @@ interface FavoritePlace {
 
 
 function SavedPlaces() {
-
-
-
+    const { tr } = useLanguage();
     const queryClient = useQueryClient();
 
 
@@ -804,25 +764,12 @@ function SavedPlaces() {
 
 
     const { data, isLoading } = useQuery({
-
-
-
         queryKey: ["favorites"],
-
-
-
         queryFn: async () => {
-
-
-
-            const res = await fetch("/api/user/favorites");
-
-
-
+            const res = await fetch("/api/user/favorites", {
+              credentials: "include",
+            });
             if (!res.ok) throw new Error("Failed");
-
-
-
             return res.json();
 
 
@@ -1197,6 +1144,381 @@ function SavedPlaces() {
 
 
 
+
+
+// ── Collections Panel ────────────────────────────────────
+
+interface Collection {
+    id: string;
+    name: string;
+    emoji?: string;
+    color?: string;
+    isDefault: boolean;
+    favoriteCount: number;
+    createdAt: string;
+}
+
+function CollectionsPanel() {
+    const queryClient = useQueryClient();
+    const [showCreate, setShowCreate] = useState(false);
+    const [newName, setNewName] = useState("");
+    const [newEmoji, setNewEmoji] = useState("⭐");
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["collections"],
+        queryFn: async () => {
+            const res = await fetch("/api/user/collections", { credentials: "include" });
+            if (!res.ok) throw new Error("Failed");
+            return res.json();
+        },
+    });
+
+    const createMutation = useMutation({
+        mutationFn: async (payload: { name: string; emoji: string }) => {
+            const res = await fetch("/api/user/collections", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error("Failed");
+            return res.json();
+        },
+        onSuccess: () => {
+            setNewName(""); setNewEmoji("⭐"); setShowCreate(false);
+            queryClient.invalidateQueries({ queryKey: ["collections"] });
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const res = await fetch(`/api/user/collections/${id}`, {
+                method: "DELETE", credentials: "include",
+            });
+            if (!res.ok) throw new Error("Failed");
+            return res.json();
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["collections"] }),
+    });
+
+    const collections: Collection[] = data?.collections || [];
+
+    if (isLoading) return <div className="space-y-2">{[1,2].map(i => <div key={i} className="h-14 bg-gray-100 animate-pulse rounded-2xl" />)}</div>;
+
+    return (
+        <div className="space-y-3">
+            {/* Create new */}
+            {showCreate ? (
+                <div className="bg-[#1A1A2E]/5 rounded-2xl p-4 border border-[#D4AF37]/20 space-y-3">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="e.g. Coffee Spots, Weekend Eats"
+                            value={newName}
+                            onChange={e => setNewName(e.target.value)}
+                            className="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30"
+                            autoFocus
+                        />
+                        <input
+                            type="text"
+                            value={newEmoji}
+                            onChange={e => setNewEmoji(e.target.value)}
+                            maxLength={2}
+                            className="w-14 text-center px-2 py-2.5 bg-white border border-gray-200 rounded-xl text-lg focus:outline-none"
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => newName.trim() && createMutation.mutate({ name: newName.trim(), emoji: newEmoji })}
+                            disabled={!newName.trim() || createMutation.isPending}
+                            className="flex-1 py-2.5 bg-[#1A1A2E] text-white rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                            Create
+                        </button>
+                        <button onClick={() => setShowCreate(false)} className="flex-1 py-2.5 border border-gray-200 text-gray-500 rounded-xl text-xs font-bold uppercase">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    onClick={() => setShowCreate(true)}
+                    className="w-full flex items-center gap-2 py-3 px-4 border border-dashed border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] text-xs font-black uppercase tracking-widest hover:bg-[#D4AF37]/5 transition-colors"
+                >
+                    <Plus className="w-4 h-4" /> New Collection
+                </button>
+            )}
+
+            {/* Collections list */}
+            {collections.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-2xl">
+                    <div className="text-3xl mb-2">📂</div>
+                    <p className="text-gray-400 text-xs font-medium">No collections yet — create one above</p>
+                </div>
+            ) : (
+                collections.map(col => (
+                    <div key={col.id} className="flex items-center gap-3 bg-white rounded-2xl p-3 border border-gray-100 shadow-sm">
+                        <div className="w-10 h-10 bg-[#D4AF37]/10 rounded-xl flex items-center justify-center text-xl shrink-0">
+                            {col.emoji || "⭐"}
+                        </div>
+                        <Link href={`/favorites/collection/${col.id}`} className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-gray-900 truncate">{col.name}</p>
+                            <p className="text-[10px] text-gray-400 font-medium">{col.favoriteCount} place{col.favoriteCount !== 1 ? "s" : ""}</p>
+                        </Link>
+                        <Link href={`/favorites/collection/${col.id}`} className="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center hover:bg-[#D4AF37]/10 transition-colors">
+                            <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                        </Link>
+                        {!col.isDefault && (
+                            <button
+                                onClick={() => deleteMutation.mutate(col.id)}
+                                className="w-8 h-8 bg-red-50 rounded-xl flex items-center justify-center hover:bg-red-100 transition-colors"
+                            >
+                                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                            </button>
+                        )}
+                    </div>
+                ))
+            )}
+        </div>
+    );
+}
+
+
+// ── Itineraries Panel ─────────────────────────────────────
+
+interface ItinerarySummary {
+    id: string;
+    title: string;
+    city: string;
+    durationDays: number;
+    activityCount: number;
+    isPublished: boolean;
+    createdAt: string;
+    shareLink?: { shareToken: string; isPublic: boolean } | null;
+}
+
+function ItinerariesPanel({ onShowAuth }: { onShowAuth: () => void }) {
+    const queryClient = useQueryClient();
+    const [showCreate, setShowCreate] = useState(false);
+    const [newTitle, setNewTitle] = useState("");
+    const [newCity, setNewCity] = useState("Addis Ababa");
+    const [newDays, setNewDays] = useState(3);
+    const [sharingId, setSharingId] = useState<string | null>(null);
+    const [shareTokenMap, setShareTokenMap] = useState<Record<string, string>>({});
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["itineraries"],
+        queryFn: async () => {
+            const res = await fetch("/api/user/itineraries", { credentials: "include" });
+            if (!res.ok) throw new Error("Failed");
+            return res.json();
+        },
+    });
+
+    const createMutation = useMutation({
+        mutationFn: async (payload: { title: string; city: string; durationDays: number }) => {
+            const res = await fetch("/api/user/itineraries", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error("Failed");
+            return res.json();
+        },
+        onSuccess: () => {
+            setNewTitle(""); setNewCity("Addis Ababa"); setNewDays(3); setShowCreate(false);
+            queryClient.invalidateQueries({ queryKey: ["itineraries"] });
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const res = await fetch(`/api/user/itineraries/${id}`, {
+                method: "DELETE", credentials: "include",
+            });
+            if (!res.ok) throw new Error("Failed");
+            return res.json();
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["itineraries"] }),
+    });
+
+    const shareMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const res = await fetch(`/api/user/itineraries/${id}/share`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ isPublic: true }),
+            });
+            if (!res.ok) throw new Error("Failed");
+            return res.json();
+        },
+        onSuccess: (data, id) => {
+            const token = data?.share?.shareToken || data?.shareToken;
+            if (token) setShareTokenMap(prev => ({ ...prev, [id]: token }));
+            queryClient.invalidateQueries({ queryKey: ["itineraries"] });
+        },
+    });
+
+    const copyLink = (id: string, token: string) => {
+        const url = `${window.location.origin}/itinerary/share/${token}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setCopiedId(id);
+            setTimeout(() => setCopiedId(null), 2000);
+        });
+    };
+
+    const itineraries: ItinerarySummary[] = data?.itineraries || [];
+
+    if (isLoading) return <div className="space-y-2">{[1,2].map(i => <div key={i} className="h-20 bg-gray-100 animate-pulse rounded-2xl" />)}</div>;
+
+    return (
+        <div className="space-y-3">
+            {/* Create new */}
+            {showCreate ? (
+                <div className="bg-[#1A1A2E]/5 rounded-2xl p-4 border border-[#D4AF37]/20 space-y-3">
+                    <input
+                        type="text"
+                        placeholder="Trip title, e.g. Addis Cultural Tour"
+                        value={newTitle}
+                        onChange={e => setNewTitle(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30"
+                        autoFocus
+                    />
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="City"
+                            value={newCity}
+                            onChange={e => setNewCity(e.target.value)}
+                            className="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none"
+                        />
+                        <select
+                            value={newDays}
+                            onChange={e => setNewDays(parseInt(e.target.value))}
+                            className="w-28 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none"
+                        >
+                            {[1,2,3,4,5,7,10,14].map(d => (
+                                <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => newTitle.trim() && createMutation.mutate({ title: newTitle.trim(), city: newCity, durationDays: newDays })}
+                            disabled={!newTitle.trim() || createMutation.isPending}
+                            className="flex-1 py-2.5 bg-[#1A1A2E] text-white rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                            Create
+                        </button>
+                        <button onClick={() => setShowCreate(false)} className="flex-1 py-2.5 border border-gray-200 text-gray-500 rounded-xl text-xs font-bold uppercase">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    onClick={() => setShowCreate(true)}
+                    className="w-full flex items-center gap-2 py-3 px-4 border border-dashed border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] text-xs font-black uppercase tracking-widest hover:bg-[#D4AF37]/5 transition-colors"
+                >
+                    <Plus className="w-4 h-4" /> New Itinerary
+                </button>
+            )}
+
+            {/* Itineraries list */}
+            {itineraries.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-2xl">
+                    <div className="text-3xl mb-2">🗺️</div>
+                    <p className="text-gray-400 text-xs font-medium">No itineraries yet — create one above</p>
+                </div>
+            ) : (
+                itineraries.map(itin => {
+                    const token = shareTokenMap[itin.id] || itin.shareLink?.shareToken;
+                    const isSharing = sharingId === itin.id;
+
+                    return (
+                        <div key={itin.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            {/* Main row */}
+                            <div className="flex items-center gap-3 p-3">
+                                <div className="w-10 h-10 bg-[#1A1A2E]/5 rounded-xl flex items-center justify-center shrink-0">
+                                    <Calendar className="w-5 h-5 text-[#1A1A2E]" />
+                                </div>
+                                <Link href={`/itineraries/${itin.id}`} className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-gray-900 truncate">{itin.title}</p>
+                                    <p className="text-[10px] text-gray-400 font-medium">
+                                        {itin.city} · {itin.durationDays} day{itin.durationDays !== 1 ? "s" : ""} · {itin.activityCount} activit{itin.activityCount !== 1 ? "ies" : "y"}
+                                    </p>
+                                </Link>
+                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${itin.isPublished ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                                    {itin.isPublished ? "Live" : "Draft"}
+                                </span>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex border-t border-gray-50">
+                                <Link
+                                    href={`/itineraries/${itin.id}`}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-black uppercase text-gray-500 hover:bg-gray-50 transition-colors"
+                                >
+                                    <Edit className="w-3 h-3" /> Edit
+                                </Link>
+                                <button
+                                    onClick={() => setSharingId(isSharing ? null : itin.id)}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-black uppercase text-[#D4AF37] hover:bg-[#D4AF37]/5 transition-colors border-l border-r border-gray-50"
+                                >
+                                    <Share2 className="w-3 h-3" /> Share
+                                </button>
+                                <button
+                                    onClick={() => deleteMutation.mutate(itin.id)}
+                                    disabled={deleteMutation.isPending}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-black uppercase text-red-400 hover:bg-red-50 transition-colors"
+                                >
+                                    <Trash2 className="w-3 h-3" /> Delete
+                                </button>
+                            </div>
+
+                            {/* Share panel */}
+                            {isSharing && (
+                                <div className="border-t border-gray-100 p-3 bg-[#1A1A2E]/[0.02] space-y-2">
+                                    {token ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex-1 flex items-center gap-2 bg-white border border-[#D4AF37]/30 rounded-xl px-3 py-2">
+                                                <Globe className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                                                <span className="text-[10px] text-gray-500 font-mono truncate">
+                                                    {`${typeof window !== "undefined" ? window.location.origin : ""}/itinerary/share/${token}`}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={() => copyLink(itin.id, token)}
+                                                className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${copiedId === itin.id ? "bg-green-500" : "bg-[#D4AF37]"}`}
+                                            >
+                                                {copiedId === itin.id ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-white" />}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => shareMutation.mutate(itin.id)}
+                                            disabled={shareMutation.isPending}
+                                            className="w-full py-2.5 bg-[#1A1A2E] text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
+                                        >
+                                            {shareMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+                                            Generate Share Link
+                                        </button>
+                                    )}
+                                    <p className="text-[9px] text-gray-400 text-center font-medium">Anyone with this link can view your itinerary</p>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })
+            )}
+        </div>
+    );
+}
 
 
 // ── {tr("profile","tripPlanner")} ─────────────────────────
@@ -1918,7 +2240,7 @@ export default function ProfilePage() {
 
 
 
-        "saved" | "ai" | "settings" | null
+        "saved" | "collections" | "itineraries" | "ai" | "settings" | null
 
 
 
@@ -2394,6 +2716,88 @@ export default function ProfilePage() {
 
 
 
+
+                {/* My Collections */}
+
+                <button
+                    onClick={() =>
+                        setActiveSection(activeSection === "collections" ? null : "collections")
+                    }
+                    className={`w-full flex items-center gap-4 rounded-2xl p-4 shadow-sm border transition-all ${activeSection === "collections"
+                            ? "bg-amber-50 border-amber-200"
+                            : "bg-white border-gray-50"
+                        }`}
+                >
+                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                        <FolderHeart className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <h3 className="text-sm font-bold text-gray-900">My Collections</h3>
+                        <p className="text-[10px] text-gray-400 font-medium">Organize saved places into themed lists</p>
+                    </div>
+                    <ArrowRight
+                        className={`w-4 h-4 text-gray-300 transition-transform ${activeSection === "collections" ? "rotate-90" : ""}`}
+                    />
+                </button>
+
+                {activeSection === "collections" && (
+                    <div className="px-1 pb-2">
+                        {user ? (
+                            <CollectionsPanel />
+                        ) : (
+                            <div className="text-center py-8 bg-gray-50 rounded-2xl">
+                                <p className="text-gray-400 text-xs font-medium">Sign in to manage your collections</p>
+                                <button
+                                    onClick={() => setShowAuth(true)}
+                                    className="mt-3 text-amber-500 text-[10px] font-black uppercase tracking-widest"
+                                >
+                                    Sign In →
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* My Itineraries */}
+
+                <button
+                    onClick={() =>
+                        setActiveSection(activeSection === "itineraries" ? null : "itineraries")
+                    }
+                    className={`w-full flex items-center gap-4 rounded-2xl p-4 shadow-sm border transition-all ${activeSection === "itineraries"
+                            ? "bg-blue-50 border-blue-200"
+                            : "bg-white border-gray-50"
+                        }`}
+                >
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <h3 className="text-sm font-bold text-gray-900">My Itineraries</h3>
+                        <p className="text-[10px] text-gray-400 font-medium">Build and share your trip plans</p>
+                    </div>
+                    <ArrowRight
+                        className={`w-4 h-4 text-gray-300 transition-transform ${activeSection === "itineraries" ? "rotate-90" : ""}`}
+                    />
+                </button>
+
+                {activeSection === "itineraries" && (
+                    <div className="px-1 pb-2">
+                        {user ? (
+                            <ItinerariesPanel onShowAuth={() => setShowAuth(true)} />
+                        ) : (
+                            <div className="text-center py-8 bg-gray-50 rounded-2xl">
+                                <p className="text-gray-400 text-xs font-medium">Sign in to create and manage itineraries</p>
+                                <button
+                                    onClick={() => setShowAuth(true)}
+                                    className="mt-3 text-blue-500 text-[10px] font-black uppercase tracking-widest"
+                                >
+                                    Sign In →
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* AI Trip Ideas */}
 

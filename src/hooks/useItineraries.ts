@@ -93,7 +93,9 @@ export function useItineraries(
   return useQuery({
     queryKey: ["itineraries"],
     queryFn: async () => {
-      const res = await fetch("/api/user/itineraries");
+      const res = await fetch("/api/user/itineraries", {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch itineraries");
       return res.json();
     },
@@ -109,7 +111,9 @@ export function useItinerary(
   return useQuery({
     queryKey: ["itinerary", id],
     queryFn: async () => {
-      const res = await fetch(`/api/user/itineraries/${id}`);
+      const res = await fetch(`/api/user/itineraries/${id}`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch itinerary");
       return res.json();
     },
@@ -140,6 +144,7 @@ export function useCreateItinerary(
       const res = await fetch("/api/user/itineraries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to create itinerary");
@@ -176,6 +181,7 @@ export function useUpdateItinerary(
       const res = await fetch(`/api/user/itineraries/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to update itinerary");
@@ -199,6 +205,7 @@ export function useDeleteItinerary(
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/user/itineraries/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to delete itinerary");
       return res.json();
@@ -218,7 +225,9 @@ export function useItineraryDays(
   return useQuery({
     queryKey: ["itinerary-days", itineraryId],
     queryFn: async () => {
-      const res = await fetch(`/api/user/itineraries/${itineraryId}/days`);
+      const res = await fetch(`/api/user/itineraries/${itineraryId}/days`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch days");
       return res.json();
     },
@@ -243,6 +252,7 @@ export function useCreateDay(
       const res = await fetch(`/api/user/itineraries/${itineraryId}/days`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to create day");
@@ -275,6 +285,7 @@ export function useUpdateDay(
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(data),
         }
       );
@@ -300,7 +311,7 @@ export function useDeleteDay(
     mutationFn: async (dayId: string) => {
       const res = await fetch(
         `/api/user/itineraries/${itineraryId}/days/${dayId}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include" }
       );
       if (!res.ok) throw new Error("Failed to delete day");
       return res.json();
@@ -323,7 +334,8 @@ export function useDayActivities(
     queryKey: ["day-activities", itineraryId, dayId],
     queryFn: async () => {
       const res = await fetch(
-        `/api/user/itineraries/${itineraryId}/days/${dayId}/activities`
+        `/api/user/itineraries/${itineraryId}/days/${dayId}/activities`,
+        { credentials: "include" }
       );
       if (!res.ok) throw new Error("Failed to fetch activities");
       return res.json();
@@ -357,6 +369,7 @@ export function useAddActivity(
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(data),
         }
       );
@@ -393,6 +406,7 @@ export function useUpdateActivity(
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(data),
         }
       );
@@ -421,7 +435,7 @@ export function useDeleteActivity(
     mutationFn: async (activityId: string) => {
       const res = await fetch(
         `/api/user/itineraries/${itineraryId}/days/${dayId}/activities/${activityId}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include" }
       );
       if (!res.ok) throw new Error("Failed to delete activity");
       return res.json();
@@ -455,6 +469,7 @@ export function useReorderActivities(
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ activityIds }),
         }
       );
@@ -489,6 +504,7 @@ export function useCreateShareLink(
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(data),
         }
       );
@@ -511,7 +527,9 @@ export function useShareLink(
   return useQuery({
     queryKey: ["share-link", itineraryId],
     queryFn: async () => {
-      const res = await fetch(`/api/user/itineraries/${itineraryId}/share`);
+      const res = await fetch(`/api/user/itineraries/${itineraryId}/share`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch share link");
       return res.json();
     },
@@ -531,7 +549,7 @@ export function useDeleteShareLink(
     mutationFn: async () => {
       const res = await fetch(
         `/api/user/itineraries/${itineraryId}/share`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include" }
       );
       if (!res.ok) throw new Error("Failed to delete share link");
       return res.json();

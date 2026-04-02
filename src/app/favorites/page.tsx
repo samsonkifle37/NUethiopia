@@ -5,6 +5,7 @@ import { Heart, Plus, Trash2, Edit2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { VerifiedImage } from "@/components/media/VerifiedImage";
+import { EmojiPicker } from "@/components/EmojiPicker";
 
 interface Collection {
   id: string;
@@ -43,7 +44,9 @@ export default function FavoritesPage() {
   const { data: collectionsData, refetch: refetchCollections } = useQuery({
     queryKey: ["collections"],
     queryFn: async () => {
-      const res = await fetch("/api/user/collections");
+      const res = await fetch("/api/user/collections", {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch collections");
       return res.json();
     },
@@ -55,6 +58,7 @@ export default function FavoritesPage() {
       const res = await fetch("/api/user/collections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to create collection");
@@ -73,6 +77,7 @@ export default function FavoritesPage() {
     mutationFn: async (collectionId: string) => {
       const res = await fetch(`/api/user/collections/${collectionId}`, {
         method: "DELETE",
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to delete collection");
       return res.json();
@@ -169,16 +174,10 @@ export default function FavoritesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Emoji
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Pick an emoji..."
+                    <EmojiPicker
                       value={newCollectionEmoji}
-                      onChange={(e) => setNewCollectionEmoji(e.target.value.slice(0, 2))}
-                      maxLength={2}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 text-2xl"
+                      onChange={setNewCollectionEmoji}
+                      label="Emoji"
                     />
                   </div>
                   <div className="flex gap-3">

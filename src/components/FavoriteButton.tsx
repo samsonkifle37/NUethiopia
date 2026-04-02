@@ -34,7 +34,9 @@ export function FavoriteButton({
   const { data: collectionsData, isLoading: collectionsLoading } = useQuery({
     queryKey: ["collections"],
     queryFn: async () => {
-      const res = await fetch("/api/user/collections");
+      const res = await fetch("/api/user/collections", {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch collections");
       return res.json();
     },
@@ -129,6 +131,7 @@ function CollectionManager({
       const res = await fetch("/api/user/collections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ name }),
       });
       if (!res.ok) throw new Error("Failed to create collection");
@@ -148,6 +151,7 @@ function CollectionManager({
       const res = await fetch(`/api/user/collections/${collectionId}/favorites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ placeId }),
       });
       if (!res.ok) throw new Error("Failed to add to collection");
@@ -160,7 +164,7 @@ function CollectionManager({
     mutationFn: async (collectionId: string) => {
       const res = await fetch(
         `/api/user/collections/${collectionId}/favorites?placeId=${placeId}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include" }
       );
       if (!res.ok) throw new Error("Failed to remove from collection");
       return res.json();

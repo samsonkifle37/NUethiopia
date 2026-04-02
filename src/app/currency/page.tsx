@@ -121,29 +121,29 @@ export default function CurrencyPage() {
                 </div>
 
                 {/* Input */}
-                <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-200 px-4 py-3 flex items-center gap-2">
-                        <span className="text-sm font-black text-gray-400">{fromLabel}</span>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <div className="w-full sm:flex-1 bg-gray-50 rounded-2xl border border-gray-200 px-4 py-3 flex items-center gap-2">
+                        <span className="text-sm font-black text-gray-400 whitespace-nowrap">{fromLabel}</span>
                         <input
                             type="number"
                             min="0"
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
-                            className="flex-1 bg-transparent text-right text-lg font-black text-gray-900 focus:outline-none"
+                            className="flex-1 bg-transparent text-right text-lg font-black text-gray-900 focus:outline-none min-w-0"
                         />
                     </div>
 
                     {/* Swap */}
                     <button
                         onClick={() => setToETB(!toETB)}
-                        className="w-10 h-10 bg-[#C9973B]/10 rounded-xl flex items-center justify-center hover:bg-[#C9973B]/20 transition shrink-0"
+                        className="w-10 h-10 bg-[#C9973B]/10 rounded-xl flex items-center justify-center hover:bg-[#C9973B]/20 transition shrink-0 transform sm:rotate-0 rotate-90"
                     >
                         <ArrowLeftRight className="w-4 h-4 text-[#C9973B]" />
                     </button>
 
-                    <div className="flex-1 bg-[#C9973B]/5 rounded-2xl border border-[#C9973B]/20 px-4 py-3 flex items-center gap-2 justify-between">
-                        <span className="text-sm font-black text-[#C9973B]">{toLabel}</span>
-                        <span className="text-lg font-black text-gray-900">{result.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                    <div className="w-full sm:flex-1 bg-[#C9973B]/5 rounded-2xl border border-[#C9973B]/20 px-4 py-3 flex items-center gap-2 justify-between">
+                        <span className="text-sm font-black text-[#C9973B] whitespace-nowrap">{toLabel}</span>
+                        <span className="text-lg font-black text-gray-900 truncate pl-2">{result.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                     </div>
                 </div>
 
@@ -156,7 +156,7 @@ export default function CurrencyPage() {
             {/* All rates quick-view */}
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 space-y-3">
                 <h2 className="text-sm font-black uppercase tracking-widest text-gray-900">All Rates → ETB</h2>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {CURRENCIES.map(c => (
                         <button
                             key={c.code}

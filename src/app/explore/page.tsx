@@ -3,8 +3,13 @@ export const metadata = {
     description: "Curated list of real places, parks, markets, and experiences.",
 };
 
+import { Suspense } from "react";
 import { ExploreClient } from "./ExploreClient";
 
 export default function ExplorePage() {
-    return <ExploreClient />;
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ExploreClient />
+        </Suspense>
+    );
 }

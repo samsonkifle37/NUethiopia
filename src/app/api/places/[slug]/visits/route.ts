@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 async function getAuthUserId(): Promise<string | null> {
     try {
         const cookieStore = await cookies();
-        const token = cookieStore.get("auth_token")?.value;
+        const token = cookieStore.get("auth-token")?.value;
         if (!token) return null;
         const secret = process.env.JWT_SECRET || "fallback_secret";
         const decoded = jwt.verify(token, secret) as { userId: string };

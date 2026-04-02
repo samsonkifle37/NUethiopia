@@ -340,7 +340,7 @@ export default function ItineraryEditorPage() {
         <ShareItineraryModal
           itineraryId={itineraryId}
           itineraryTitle={itinerary.title}
-          onClose={() => setShowShareModal(false)}
+          onCloseAction={() => setShowShareModal(false)}
         />
       )}
     </div>
@@ -455,8 +455,6 @@ function ActivityItem({ activity, onDelete }: ActivityItemProps) {
         <VerifiedImage
           src={activity.place.image}
           alt={activity.place.name}
-          width={80}
-          height={80}
           className="rounded w-20 h-20 object-cover flex-shrink-0"
         />
       )}

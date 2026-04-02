@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Heart, Trash2, Share2 } from "lucide-react";
+import { ArrowLeft, Heart, Trash2, Share2, Search } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { VerifiedImage } from "@/components/media/VerifiedImage";
@@ -40,12 +40,15 @@ export default function CollectionPage() {
   const params = useParams();
   const collectionId = params.id as string;
   const [showShareModal, setShowShareModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch collection with favorites
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["collection", collectionId],
     queryFn: async () => {
-      const res = await fetch(`/api/user/collections/${collectionId}`);
+      const res = await fetch(`/api/user/collections/${collectionId}`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch collection");
       return res.json();
     },
@@ -57,7 +60,7 @@ export default function CollectionPage() {
     mutationFn: async (placeId: string) => {
       const res = await fetch(
         `/api/user/collections/${collectionId}/favorites?placeId=${placeId}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include" }
       );
       if (!res.ok) throw new Error("Failed to remove from collection");
       return res.json();
@@ -147,10 +150,41 @@ export default function CollectionPage() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        {collection.favorites.length > 3 && (
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search places by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 bg-white"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Places Grid */}
         {collection.favorites.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {collection.favorites.map(({ id, place }) => (
+          <>
+            {/* Filtered Results Message */}
+            {searchQuery && (
+              <div className="mb-4 text-sm text-gray-600">
+                Found {
+                  collection.favorites.filter(({ place }) =>
+                    place.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  ).length
+                } of {collection.favorites.length} places
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {collection.favorites
+                .filter(({ place }) =>
+                  place.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map(({ id, place }) => (
               <div
                 key={id}
                 className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
@@ -231,7 +265,19 @@ export default function CollectionPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+
+            {/* No Results Message */}
+            {searchQuery && collection.favorites.filter(({ place }) =>
+              place.name.toLowerCase().includes(searchQuery.toLowerCase())
+            ).length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-600">
+                  No places found matching "{searchQuery}"
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16 bg-gray-50 rounded-lg">
             <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
