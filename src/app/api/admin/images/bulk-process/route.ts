@@ -1,13 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from 'fs';
 import path from 'path';
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
 
 export async function POST(req: NextRequest) {
     try {
+        const token = req.cookies.get("auth-token")?.value;
         const authHeader = req.headers.get("Authorization");
         const adminSecret = process.env.ADMIN_SEED_SECRET;
 
-        if (!authHeader || authHeader !== `Bearer ${adminSecret}`) {
+        let isAdmin = false;
+
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET) as { accountType: string };
+                if (decoded.accountType === "admin") isAdmin = true;
+            } catch (e) { /* ignore invalid token if header might be present */ }
+        }
+
+        if (!isAdmin && authHeader === `Bearer ${adminSecret}` && adminSecret) {
+            isAdmin = true;
+        }
+
+        if (!isAdmin) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 

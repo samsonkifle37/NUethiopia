@@ -159,11 +159,23 @@ function AuthPageContent() {
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    required
+                                    required={mode === "login"}
                                     minLength={6}
                                     className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] text-sm font-medium text-black"
                                 />
                             </div>
+
+                            {mode === "login" && (
+                                <div className="text-right">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setError("Password reset feature is coming soon. Please contact administrator for assistance.")}
+                                        className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D4AF37] transition-colors"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                </div>
+                            )}
 
                             {error && (
                                 <p className="text-red-600 text-xs font-bold bg-red-50 px-4 py-3 border border-red-100 rounded-xl">
@@ -171,23 +183,42 @@ function AuthPageContent() {
                                 </p>
                             )}
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-[#1A1612] text-[#D4AF37] py-4 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-colors shadow-lg shadow-[#1A1612]/20 disabled:opacity-50 mt-6"
-                            >
-                                {loading ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : mode === "login" ? (
-                                    <>
-                                        <LogIn className="w-4 h-4" /> Sign In
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="w-4 h-4" /> {accountType === "host" ? "Register as Host" : "Create Account"}
-                                    </>
+                            <div className="space-y-3 pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-[#1A1612] text-[#D4AF37] py-4 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-colors shadow-lg shadow-[#1A1612]/20 disabled:opacity-50"
+                                >
+                                    {loading ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : mode === "login" ? (
+                                        <>
+                                            <LogIn className="w-4 h-4" /> Sign In
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-4 h-4" /> {accountType === "host" ? "Register as Host" : "Create Account"}
+                                        </>
+                                    )}
+                                </button>
+
+                                {mode === "login" && (
+                                    <div className="relative py-2">
+                                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+                                        <div className="relative flex justify-center text-[8px] font-black uppercase tracking-[0.3em]"><span className="bg-white px-4 text-gray-300">or</span></div>
+                                    </div>
                                 )}
-                            </button>
+
+                                {mode === "login" && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setError("Magic links require an active email provider. This feature is coming soon.")}
+                                        className="w-full bg-white text-gray-600 border border-gray-200 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+                                    >
+                                        <Mail className="w-4 h-4" /> Sign in with Magic Link
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     )}
 

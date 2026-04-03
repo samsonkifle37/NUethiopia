@@ -1,13 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
+
 export async function POST(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const token = req.cookies.get("auth-token")?.value;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { accountType: string };
+        if (decoded.accountType !== "admin") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+    } catch {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     try {
         const { action } = await req.json(); // "approve" or "reject"
-        const resolvedParams = await params;
+        const resolvedParams = await context.params;
         const claimId = resolvedParams.id;
 
         const claim = await prisma.ownerClaim.findUnique({

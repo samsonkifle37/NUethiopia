@@ -1,30 +1,17 @@
-import { prisma } from "../src/lib/prisma";
+import { PrismaClient } from "@prisma/client";
 
-async function promoteAdmin() {
-    const email = "nuethiopia2026@gmail.com";
-    try {
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-            console.error(`User with email ${email} not found. Please sign up first.`);
-            process.exit(1);
-        }
+const prisma = new PrismaClient();
 
-        const updatedUser = await prisma.user.update({
-            where: { email },
-            data: {
-                accountType: "admin",
-                roles: Array.from(new Set([...user.roles, "admin"])),
-                isEmailVerified: true
-            }
-        });
+async function main() {
+  const email = "nuethiopia2026@gmail.com";
+  console.log(`Promoting ${email} to admin...`);
 
-        console.log(`Successfully promoted ${email} to ADMIN.`);
-        console.log("Updated User Data:", JSON.stringify(updatedUser, null, 2));
-    } catch (error: any) {
-        console.error("Failed to promote user:", error.message);
-    } finally {
-        await prisma.$disconnect();
-    }
+  await (prisma as any).$executeRawUnsafe(
+    `UPDATE "User" SET "accountType" = 'admin', roles = ARRAY['traveller', 'admin'], "isEmailVerified" = true WHERE email = $1`,
+    email
+  );
+  console.log("Success! Raw SQL promotion completed.");
+    await prisma.$disconnect();
 }
 
-promoteAdmin();
+main();

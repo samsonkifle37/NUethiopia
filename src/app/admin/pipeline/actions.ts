@@ -2,8 +2,25 @@
 
 import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
+
+async function verifyAdmin() {
+    const token = (await cookies()).get("auth-token")?.value;
+    if (!token) throw new Error("Unauthorized");
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        if (decoded.accountType !== "admin") throw new Error("Forbidden");
+        return decoded;
+    } catch {
+        throw new Error("Unauthorized");
+    }
+}
 
 export async function getPendingCandidates() {
+    await verifyAdmin();
     return await prisma.duplicateCandidate.findMany({
         where: { status: 'PENDING' },
         orderBy: { similarityScore: 'desc' }
@@ -12,12 +29,14 @@ export async function getPendingCandidates() {
 
 // Helper to manually fetch places for candidates because the relations aren't explicitly bound in schema
 export async function getCandidatePlaces(masterId: string, duplicateId: string) {
+    await verifyAdmin();
     const master = await prisma.place.findUnique({ where: { id: masterId }, include: { placeSources: true } });
     const duplicate = await prisma.place.findUnique({ where: { id: duplicateId }, include: { placeSources: true } });
     return { master, duplicate };
 }
 
 export async function resolveDuplicate(candidateId: string, masterId: string, duplicateId: string, action: 'MERGE' | 'REJECT' | 'IGNORE') {
+    await verifyAdmin();
     if (action === 'MERGE') {
         // Move sources from duplicate to master
         const dupSources = await prisma.placeSource.findMany({ where: { placeId: duplicateId } });
@@ -57,6 +76,7 @@ export async function resolveDuplicate(candidateId: string, masterId: string, du
 }
 
 export async function getVerificationData() {
+    await verifyAdmin();
     return await prisma.place.findMany({
         orderBy: { createdAt: 'desc' },
         take: 50,
@@ -68,6 +88,7 @@ export async function getVerificationData() {
 }
 
 export async function getQualityQueue() {
+    await verifyAdmin();
     return await prisma.place.findMany({
         where: {
             isActive: true,

@@ -7,8 +7,28 @@ import crypto from 'crypto';
 import sizeOf from 'image-size';
 import axios from 'axios';
 import { mirrorImage } from "@/lib/supabase-storage";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
+
+async function verifyAdmin() {
+    const token = (await cookies()).get("auth-token")?.value;
+    if (!token) throw new Error("Unauthorized");
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        if (decoded.accountType !== "admin") {
+            throw new Error("Forbidden: Admin access required");
+        }
+        return decoded;
+    } catch {
+        throw new Error("Unauthorized");
+    }
+}
 
 export async function getPipelineImages(filter: 'ALL'|'PENDING'|'FAILED') {
+    await verifyAdmin();
     return await prisma.placeImage.findMany({
         where: filter === 'ALL' ? {} : { status: filter },
         include: { place: { select: { name: true, type: true } } },
@@ -18,6 +38,7 @@ export async function getPipelineImages(filter: 'ALL'|'PENDING'|'FAILED') {
 }
 
 export async function getPipelineStats() {
+    await verifyAdmin();
     const raw = await prisma.placeImage.groupBy({
         by: ['status'],
         _count: { id: true }
@@ -41,6 +62,7 @@ export async function getPipelineStats() {
 }
 
 export async function updateImageState(id: string, action: 'APPROVE' | 'REJECT' | 'SET_PRIMARY' | 'RETRY', newUrl?: string) {
+    await verifyAdmin();
     if (action === 'REJECT') {
         await prisma.placeImage.update({
             where: { id },

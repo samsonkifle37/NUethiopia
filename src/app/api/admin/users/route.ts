@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
         }
 
         try {
-            jwt.verify(token, JWT_SECRET);
+            const decoded = jwt.verify(token, JWT_SECRET) as { accountType?: string };
+            if (decoded.accountType !== "admin") {
+                return NextResponse.json({ error: "Forbidden - admin access required" }, { status: 403 });
+            }
         } catch {
             return NextResponse.json({ error: "Unauthorized - invalid session" }, { status: 401 });
         }

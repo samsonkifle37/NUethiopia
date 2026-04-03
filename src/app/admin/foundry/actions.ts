@@ -3,8 +3,25 @@
 import { prisma } from '@/lib/prisma';
 import { IngestionStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
+
+async function verifyAdmin() {
+    const token = (await cookies()).get("auth-token")?.value;
+    if (!token) throw new Error("Unauthorized");
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        if (decoded.accountType !== "admin") throw new Error("Forbidden");
+        return decoded;
+    } catch {
+        throw new Error("Unauthorized");
+    }
+}
 
 export async function getIngestionListings(filters: { status?: IngestionStatus | 'ALL', city?: string, category?: string } = {}) {
+    await verifyAdmin();
     const where: any = {};
     if (filters.status && filters.status !== 'ALL') where.status = filters.status;
     if (filters.city) where.city = filters.city;
@@ -62,6 +79,7 @@ export async function getIngestionListings(filters: { status?: IngestionStatus |
 }
 
 export async function approveListing(id: string) {
+    await verifyAdmin();
     try {
         await prisma.ingestionListing.update({
             where: { id },
@@ -74,6 +92,7 @@ export async function approveListing(id: string) {
 }
 
 export async function rejectListing(id: string) {
+    await verifyAdmin();
     try {
         await prisma.ingestionListing.update({
             where: { id },
@@ -86,6 +105,7 @@ export async function rejectListing(id: string) {
 }
 
 export async function rerunImageLookup(id: string) {
+    await verifyAdmin();
     try {
         await prisma.ingestionListing.update({
             where: { id },
@@ -98,6 +118,7 @@ export async function rerunImageLookup(id: string) {
 }
 
 export async function bulkPublish(ids: string[]) {
+    await verifyAdmin();
     if (ids.length === 0) return;
     try {
         await prisma.ingestionListing.updateMany({

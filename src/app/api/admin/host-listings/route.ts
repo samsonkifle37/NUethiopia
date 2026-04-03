@@ -4,11 +4,11 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
 
-function getAdminUser(request: NextRequest): { userId: string } | null {
+function getAdminUser(request: NextRequest): { userId: string; accountType: string } | null {
     const token = request.cookies.get("auth-token")?.value;
     if (!token) return null;
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; accountType: string };
         return decoded;
     } catch {
         return null;
@@ -22,10 +22,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check user has admin role
-    const user = await prisma.user.findUnique({ where: { id: admin.userId } });
-    if (!user || user.accountType !== "admin" && !user.roles?.includes("admin")) {
-        return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    if (admin.accountType !== "admin") {
+        return NextResponse.json({ error: "Forbidden - admin access required" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

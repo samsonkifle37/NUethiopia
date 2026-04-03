@@ -6,15 +6,11 @@ const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
 
 function verifyToken(request: NextRequest) {
     const token = request.cookies.get("auth-token")?.value;
-    if (!token) {
-        console.error("[VERIFY_TOKEN] No token found in cookies");
-        return null;
-    }
+    if (!token) return null;
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; accountType: string };
         return decoded;
     } catch (e: any) {
-        console.error("[VERIFY_TOKEN] Token verification failed:", e.message, "Using Secret:", JWT_SECRET.substring(0, 3) + "...");
         return null;
     }
 }
@@ -25,12 +21,11 @@ export async function PATCH(
     context: { params: Promise<{ id: string }> }
 ) {
     const decoded = verifyToken(request);
-    if (!decoded) {
+    if (!decoded || decoded.accountType !== "admin") {
         return NextResponse.json({ 
-            error: "Unauthorized", 
-            details: "Invalid or missing session token. Please re-login.",
-            debug: { hasToken: !!request.cookies.get("auth-token") }
-        }, { status: 401 });
+            error: decoded ? "Forbidden" : "Unauthorized", 
+            details: decoded ? "Admin access required." : "Invalid or missing session token.",
+        }, { status: decoded ? 403 : 401 });
     }
 
     try {
@@ -66,12 +61,11 @@ export async function DELETE(
     context: { params: Promise<{ id: string }> }
 ) {
     const decoded = verifyToken(request);
-    if (!decoded) {
+    if (!decoded || decoded.accountType !== "admin") {
         return NextResponse.json({ 
-            error: "Unauthorized", 
-            details: "Session verification failed. Try logging out and back in.",
-            debug: { hasToken: !!request.cookies.get("auth-token") }
-        }, { status: 401 });
+            error: decoded ? "Forbidden" : "Unauthorized", 
+            details: decoded ? "Admin access required." : "Session verification failed.",
+        }, { status: decoded ? 403 : 401 });
     }
 
     try {

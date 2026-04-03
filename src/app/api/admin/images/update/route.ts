@@ -2,13 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 // Force re-compile for prisma schema update
 
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
+
 export async function POST(req: NextRequest) {
     try {
-        // B) Add an admin protection check
+        // Authenticate via either JWT cookie OR Admin Secret Header
+        const token = req.cookies.get("auth-token")?.value;
         const authHeader = req.headers.get("Authorization");
-        const adminSecret = process.env.ADMIN_SEED_SECRET; // Using existing seed secret as admin key
+        const adminSecret = process.env.ADMIN_SEED_SECRET;
 
-        if (!authHeader || authHeader !== `Bearer ${adminSecret}`) {
+        let isAdmin = false;
+
+        // 1. Check JWT
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET) as { accountType: string };
+                if (decoded.accountType === "admin") isAdmin = true;
+            } catch (e) { /* ignore invalid token if header might be present */ }
+        }
+
+        // 2. Check Admin Secret Header (legacy/worker support)
+        if (!isAdmin && authHeader === `Bearer ${adminSecret}` && adminSecret) {
+            isAdmin = true;
+        }
+
+        if (!isAdmin) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
