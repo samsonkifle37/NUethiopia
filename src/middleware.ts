@@ -11,6 +11,11 @@ const JWT_SECRET = process.env.JWT_SECRET || "addis_fallback_secret";
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     
+    // Exempt the emergency recovery API from middleware (uses x-admin-secret)
+    if (pathname === "/api/admin/recover-access") {
+        return NextResponse.next();
+    }
+
     // Auth Check
     const token = request.cookies.get("auth-token")?.value;
     
