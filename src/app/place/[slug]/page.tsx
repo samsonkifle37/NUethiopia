@@ -25,6 +25,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useInAppBrowser } from "@/components/InAppBrowser";
 import { getPrimaryVerifiedImage } from "@/lib/images";
+import { ActionButtonGroup } from "@/components/ActionButtonGroup";
+import { getCanonicalUrl } from "@/lib/share";
 
 interface PlaceImage {
     id: string;
@@ -387,9 +389,18 @@ export default function PlaceDetailPage() {
                                 className={`w-5 h-5 transition-colors ${isSaved ? "text-[#C9973B] fill-[#C9973B]" : "text-white"}`}
                             />
                         </button>
-                        <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
-                            <Share2 className="w-5 h-5 text-white" />
-                        </button>
+                        <ActionButtonGroup 
+                            variant="header-transparent"
+                            item={{
+                                id: place.id,
+                                slug: place.slug,
+                                title: place.name,
+                                type: "place",
+                                category: place.type,
+                                imageUrl: getPrimaryVerifiedImage(place),
+                                shortDescription: place.shortDescription || ""
+                            }}
+                        />
                     </div>
                 </div>
 

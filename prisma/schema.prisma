@@ -258,6 +258,12 @@ model Place {
   claimedAt         DateTime?
   lastCheckedAt     DateTime?
 
+  // Real-time Event & Availability Signals
+  hasLiveEvent       Boolean   @default(false)
+  eventStartTime     DateTime?
+  eventEndTime       DateTime?
+  availabilityStatus String?   // e.g. "last_seats", "filling_up", "available"
+
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   images              PlaceImage[]
@@ -269,6 +275,7 @@ model Place {
   ingestionListing    IngestionListing?
   visits              PlaceVisit[]
   itineraryActivities ItineraryActivity[]
+  events              Event[]
 
   placeSources     PlaceSource[]
   verificationLogs VerificationLog[]
@@ -551,6 +558,27 @@ model FavoriteInCollection {
 }
 
 // ── Itinerary System (Trip Planning) ────────────
+model Event {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  title           String
+  description     String
+  placeId         String?  // Optional link to a specific place
+  startTime       DateTime
+  endTime         DateTime?
+  category        String   // music, food, outdoor, culture
+  isFeatured      Boolean  @default(false)
+  imageUrl        String?
+  source          String   @default("manual")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  place           Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
+
+  @@index([startTime])
+  @@index([category])
+}
+
 model Itinerary {
   id           String          @id @default(uuid())
   userId       String

@@ -11,6 +11,7 @@ import { VerifiedImage } from "@/components/media/VerifiedImage";
 import { getPrimaryVerifiedImage } from "@/lib/images";
 
 import { useQuery } from "@tanstack/react-query";
+import { resolveEventRoute } from "@/lib/routing";
 
 import { Logo } from "@/components/Logo";
 
@@ -44,11 +45,13 @@ import {
 
   Compass,
 
-  Wine
+  Wine,
+  Plus,
+  ChevronRight
 
 } from "lucide-react";
-
-import { useState } from "react";
+import { ActionButtonGroup } from "@/components/ActionButtonGroup";
+import { useState, useEffect } from "react";
 
 
 
@@ -246,127 +249,195 @@ function HeroSection() {
 
 
 
-function CategorySection() {
-  const { tr } = useLanguage();
-
-  const categories = [
-    { icon: Car,            key: "pickup",    href: "/transport" },
-    { icon: BedDouble,      key: "stays",     href: "/stays"     },
-    { icon: Map,            key: "tours",     href: "/tours"     },
-    { icon: Navigation,     key: "transport", href: "/transport" },
-    { icon: UtensilsCrossed,key: "dining",    href: "/dining"    },
-    { icon: Wine,           key: "nightlife", href: "/dining"    },
-  ];
-
-
-
-  return (
-
-    <div className="grid grid-cols-3 gap-3 px-1 mt-8">
-
-      {categories.map(({ icon: Icon, key, href }) => (
-
-        <Link
-
-          key={key}
-
-          href={href}
-
-          className="flex flex-col items-center gap-2 group p-4 bg-white rounded-3xl shadow-sm border border-gray-100 hover:border-[#D4AF37]/50 hover:shadow-md transition-all active:scale-95"
-
-        >
-
-          <div className="w-12 h-12 bg-[#1A1A2E]/5 text-[#6B3E26] rounded-2xl flex items-center justify-center group-hover:bg-[#1A1A2E] group-hover:text-[#D4AF37] transition-colors">
-
-            <Icon className="w-5 h-5" strokeWidth={1.5} />
-
-          </div>
-
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#1A1A2E]">
-
-            {tr("home", key).toUpperCase()}
-
-          </span>
-
-        </Link>
-
-      ))}
-
-    </div>
-
-  );
-
-}
-
-
 
 function AirportUtilityCard() {
   const { tr } = useLanguage();
 
   return (
-
-    <div className="bg-[#1A1A2E] rounded-[2rem] p-6 shadow-xl border border-[#D4AF37]/20 relative overflow-hidden mt-8 text-white">
-
+    <div className="bg-[#1A1A2E] rounded-[2rem] p-6 shadow-xl border border-[#D4AF37]/20 relative overflow-hidden mt-8 text-white mx-1">
       <div className="absolute right-0 top-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
-
       <div className="flex items-center gap-4 mb-5 relative z-10">
-
         <div className="w-12 h-12 bg-[#D4AF37]/20 text-[#D4AF37] rounded-2xl flex items-center justify-center">
-
           <Plane className="w-6 h-6" />
-
         </div>
-
         <div>
-
-          <h3 className="text-[#D4AF37] font-black text-sm uppercase tracking-widest">Just landed at Bole?</h3>
-
+          <h3 className="text-[#D4AF37] font-black text-sm uppercase tracking-widest uppercase">Just landed at Bole?</h3>
           <p className="text-xs text-gray-400 font-medium mt-0.5">Your first-hour essentials.</p>
-
         </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-3 relative z-10">
+        <Link href="/transport" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
+          <Car className="w-3.5 h-3.5 text-[#D4AF37]" /> Airport Pickup
+        </Link>
+        <Link href="/currency" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
+          <Banknote className="w-3.5 h-3.5 text-[#D4AF37]" /> Exchange Money
+        </Link>
+        <Link href="/sim" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
+          <Wifi className="w-3.5 h-3.5 text-[#D4AF37]" /> Get a SIM
+        </Link>
+        <Link href="/plan?q=First+day+in+Addis+Ababa" className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#1A1A2E] flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition shadow-lg shadow-[#D4AF37]/20">
+          <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} /> Quick AI Plan
+        </Link>
+        <Link href="/coffee-passport" className="bg-[#C9973B]/20 hover:bg-[#C9973B]/30 border border-[#C9973B]/30 col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-[#E8C07A] transition">
+          {tr("home","coffeePassport")}
+        </Link>
+      </div>
+    </div>
+  );
+}
 
+function WhatIsHappeningNow() {
+  const { tr } = useLanguage();
+  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
+
+  // Get user location for context-aware ranking
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      }, (err) => {
+        console.warn("Geolocation denied, using default Addis center.");
+      });
+    }
+  }, []);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["now-feed", coords],
+    queryFn: async () => {
+      const url = coords 
+        ? `/api/now-feed?lat=${coords.lat}&lng=${coords.lng}`
+        : `/api/now-feed?city=Addis%20Ababa`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch feed");
+      return res.json();
+    },
+    refetchInterval: 5 * 60 * 1000, // 5 min refresh
+    refetchOnWindowFocus: true,     // Re-fetch on focus
+    staleTime: 60 * 1000,          // Consider stale after 1 min
+  });
+
+  const nowServer = data?.context?.timestamp ? new Date(data.context.timestamp) : new Date();
+  const day = nowServer.toLocaleDateString('en-US', { weekday: 'long' });
+  const time = nowServer.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const timeOfDay = data?.context?.timeOfDay || "Today";
+
+  return (
+    <div className="mt-8 px-2 space-y-6">
+      
+      {/* A. Context Header */}
+      <div className="flex flex-col gap-1 px-2 animate-in fade-in slide-in-from-left duration-700">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] flex items-center gap-2">
+          What's happening now
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+        </h2>
+        <p className="text-xl font-black text-[#1A1A2E] leading-tight">
+          {day} {time} in Addis — <span className="text-gray-400 font-medium italic">here's what's worth your time</span>
+        </p>
       </div>
 
-      
+      {/* B. Featured Card (PRIMARY) */}
+      <div className="px-1">
+        {isLoading ? (
+          <div className="w-full h-64 bg-gray-100 rounded-[2.5rem] animate-pulse shadow-xl shadow-gray-200/50" />
+        ) : data?.featured ? (
+          <Link href={`/place/${data.featured.slug}`} className="block relative h-64 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#D4AF37]/20 group transition-all transform hover:-translate-y-1">
+             <VerifiedImage 
+              src={getPrimaryVerifiedImage(data.featured)} 
+              alt={data.featured.name}
+              className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700 ease-out z-0"
+              entityType={data.featured.type as any}
+              isRepresentative={false}
+              showBadge={false}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E] via-[#1A1A2E]/20 to-transparent z-10" />
+            
+            <div className="absolute top-5 left-5 bg-[#D4AF37] text-[#1A1A2E] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest z-20 shadow-lg animate-pulse">
+               {data.featured.hasLiveEvent ? "Live Event" : (data.featured.urgency || "Premium")}
+            </div>
 
-      <div className="grid grid-cols-2 gap-3 relative z-10">
+            <div className="absolute bottom-6 left-6 right-6 z-20">
+               <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
+                  <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{data.featured.microSignal}</span>
+               </div>
+               <h3 className="text-2xl font-black text-white leading-tight mb-2">{data.featured.name}</h3>
+               <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-[#D4AF37]" /> {data.featured.area || "Nearby"}
+                  </span>
+                  <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1">
+                    <Navigation className="w-3 h-3 text-[#D4AF37]" /> {data.featured.distance || "1.2km away"}
+                  </span>
+               </div>
+            </div>
+          </Link>
+        ) : null}
+      </div>
 
-        <Link href="/transport" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
+      {/* C. Secondary Cards (2 max) */}
+      <div className="grid grid-cols-2 gap-4 px-1">
+        {isLoading ? (
+          [1, 2].map(i => <div key={i} className="h-40 bg-gray-100 rounded-[2rem] animate-pulse" />)
+        ) : data?.secondary?.map((p: any, idx: number) => (
+          <Link key={p.id} href={`/place/${p.slug}`} className="flex flex-col h-40 bg-[#1A1A2E] rounded-[2rem] overflow-hidden relative group active:scale-95 transition-all shadow-xl shadow-gray-200/40 transform hover:-translate-y-1">
+             <VerifiedImage 
+              src={getPrimaryVerifiedImage(p)} 
+              alt={p.name}
+              className="absolute inset-0 w-full h-full opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out z-0"
+              entityType={p.type as any}
+              showBadge={false}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E] via-transparent to-transparent z-10" />
+            <div className="mt-auto p-4 relative z-20">
+               <div className="flex items-center gap-1 mb-1">
+                  <span className="text-[8px] font-black text-[#D4AF37] uppercase tracking-widest">{p.microSignal}</span>
+               </div>
+               <h4 className="text-xs font-black text-white leading-tight line-clamp-2">{p.name}</h4>
+               {p.distance && (
+                <p className="text-[7px] font-extrabold uppercase tracking-[0.1em] text-gray-400 mt-0.5">{p.distance}</p>
+               )}
+            </div>
+          </Link>
+        ))}
+      </div>
 
-          <Car className="w-3.5 h-3.5 text-[#D4AF37]" /> Airport Pickup
-
+      {/* 4. Browse All Experience CTA */}
+      <div className="px-1 pt-2">
+        <Link 
+          href="/explore" 
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-5 rounded-[2rem] text-sm font-black text-[#1A1A2E] uppercase tracking-widest hover:border-[#D4AF37] hover:bg-gray-50 transition-all active:scale-[0.98] shadow-sm transform hover:scale-[0.99]"
+        >
+          Browse all experiences <ArrowRight className="w-4 h-4 text-[#D4AF37]" strokeWidth={3} />
         </Link>
-
-        <Link href="/currency" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
-
-          <Banknote className="w-3.5 h-3.5 text-[#D4AF37]" /> Exchange Money
-
-        </Link>
-
-        <Link href="/sim" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
-
-          <Wifi className="w-3.5 h-3.5 text-[#D4AF37]" /> Get a SIM
-
-        </Link>
-
-        <Link href="/plan?q=First+day+in+Addis+Ababa" className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#1A1A2E] flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition shadow-lg shadow-[#D4AF37]/20">
-
-          <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} /> Quick AI Plan
-
-        </Link>
-
-        <Link href="/coffee-passport" className="bg-[#C9973B]/20 hover:bg-[#C9973B]/30 border border-[#C9973B]/30 col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-[#E8C07A] transition">
-
-          {tr("home","coffeePassport")}
-
-        </Link>
-
       </div>
 
     </div>
-
   );
+}
 
+function FinalActionTiles() {
+  const actions = [
+    { name: "Find a Stay", href: "/stays", icon: BedDouble },
+    { name: "Plan a Trip", href: "/plan", icon: Sparkles },
+  ];
+
+  return (
+    <div className="flex gap-4 px-3 mt-10">
+      {actions.map((tile) => (
+        <Link 
+          key={tile.name} 
+          href={tile.href} 
+          className="flex-1 flex flex-col items-center gap-3 p-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-md hover:border-[#D4AF37] hover:shadow-xl transition-all active:scale-95 group"
+        >
+          <div className="w-14 h-14 bg-[#1A1A2E]/5 text-[#1A1A2E] rounded-2xl flex items-center justify-center group-hover:bg-[#1A1A2E] group-hover:text-[#D4AF37] transition-all">
+            <tile.icon className="w-6 h-6" strokeWidth={1.5} />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-center text-[#1A1A2E]">{tile.name}</span>
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 
@@ -758,87 +829,155 @@ function AiRecommendations() {
 
 
 function ThisWeekInAddis() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["this-week"],
+  // 1. Weather Query
+  const { data: weatherData, isLoading: weatherLoading } = useQuery({
+    queryKey: ["weekly-weather"],
     queryFn: async () => {
-      const res = await fetch("/api/this-week");
-      if (!res.ok) throw new Error("Failed to fetch");
+      const res = await fetch("/api/weather/weekly");
+      if (!res.ok) throw new Error("Failed to fetch weather");
       return res.json();
-    }
+    },
+    refetchInterval: 60 * 60 * 1000 // 1 hour refresh
   });
 
-  const getDayName = (dateStr: string) => {
+  // 2. Events Query
+  const { data: eventsData, isLoading: eventsLoading } = useQuery({
+    queryKey: ["this-week-events"],
+    queryFn: async () => {
+      const res = await fetch("/api/events/this-week");
+      if (!res.ok) throw new Error("Failed to fetch events");
+      return res.json();
+    },
+    refetchInterval: 15 * 60 * 1000 // 15 min refresh
+  });
+
+  const getDayLabel = (dateStr: string, index: number) => {
+    if (index === 0) return "Today";
     return new Date(dateStr).toLocaleDateString("en-US", { weekday: "short" });
   };
 
-  const editorialPicks = [
-    { emoji: "☕", title: "Coffee Ceremony 101", desc: "Experience Ethiopia's most sacred daily ritual.", link: "/coffee-passport", color: "from-amber-500 to-orange-600" },
-    { emoji: "🎵", title: "Live Jazz Nights", desc: "Find the best Ethiopian jazz clubs in Bole.", link: "/dining", color: "from-purple-500 to-indigo-600" },
-    { emoji: "🏛️", title: "Heritage Walk", desc: "Piazza's colonial architecture & hidden cafés.", link: "/tours", color: "from-emerald-500 to-teal-600" },
-    { emoji: "🌄", title: "Entoto Escapes", desc: "Eucalyptus forests 20 min from the city center.", link: "/tours", color: "from-sky-500 to-blue-600" },
-  ];
-
   return (
-    <div className="py-8 space-y-5">
-      {/* Dynamic This Week & Weather */}
-      <div className="bg-gradient-to-r from-[#1A1612] to-[#2A2A3A] rounded-2xl p-5 text-white">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">🗓️</span>
-          <div>
-            <h2 className="text-sm font-black uppercase tracking-widest text-[#C9973B]">This Week in Addis</h2>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Live Weather & Events</p>
+    <div className="py-8 space-y-6">
+      {/* A. Unified Card Container */}
+      <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252545] rounded-[2.5rem] p-6 text-white shadow-2xl shadow-black/20 border border-white/5 relative overflow-hidden group">
+        {/* Glow effect */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#D4AF37]/10 blur-[80px] rounded-full group-hover:bg-[#D4AF37]/20 transition-all duration-700" />
+        
+        {/* Card Header */}
+        <div className="flex items-center justify-between mb-6 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-2xl shadow-inner">🗓️</div>
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37]">This Week in Addis</h2>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Live City Feed</p>
+            </div>
+          </div>
+          <div className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#D4AF37] border border-[#D4AF37]/20 flex items-center gap-2">
+             <span className="w-1 h-1 rounded-full bg-[#D4AF37] animate-pulse" /> Live
           </div>
         </div>
 
-        {/* Weather Forecast */}
-        {!isLoading && data?.weather && (
-          <div className="grid grid-cols-3 gap-2 mb-5">
-            {data.weather.map((w: any, i: number) => (
-              <div key={i} className="bg-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
-                <span className="text-[9px] font-bold text-[#E8C07A] uppercase">{i === 0 ? "Today" : getDayName(w.date)}</span>
-                <span className="text-xl my-1">{w.icon}</span>
-                <span className="text-[10px] font-black">{w.max}° <span className="text-gray-500 font-medium">/ {w.min}°</span></span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Dynamic Events */}
-        {isLoading ? (
-          <div className="space-y-4 animate-pulse pt-2">
-             <div className="h-4 bg-white/10 rounded-full w-3/4"></div>
-             <div className="h-4 bg-white/10 rounded-full w-1/2"></div>
-             <div className="h-4 bg-white/10 rounded-full w-5/6"></div>
-          </div>
-        ) : data?.events ? (
-          <div className="space-y-4">
-             {data.events.map((ev: any, i: number) => (
-               <div key={i} className="flex gap-3 items-start border-t border-white/5 pt-3 first:border-0 first:pt-0">
-                 <span className="text-xl mt-0.5 bg-white/5 w-8 h-8 rounded-full flex items-center justify-center shrink-0">{ev.icon}</span>
-                 <div>
-                   <h3 className="text-sm font-bold text-white leading-tight">{ev.title}</h3>
-                   <p className="text-[11px] text-gray-400 mt-1 leading-snug">{ev.desc}</p>
+        {/* B. Weather Strip - RESTORED */}
+        <div className="relative z-10 mb-8">
+           {weatherLoading ? (
+             <div className="grid grid-cols-3 gap-3">
+               {[1, 2, 3].map(i => <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)}
+             </div>
+           ) : weatherData?.weather ? (
+             <div className="grid grid-cols-3 gap-3">
+               {weatherData.weather.map((w: any, i: number) => (
+                 <div key={i} className="bg-white/5 group-hover:bg-white/10 transition-colors rounded-2xl p-3 flex flex-col items-center shadow-inner border border-white/5">
+                   <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-wider mb-1">{getDayLabel(w.date, i)}</span>
+                   <span className="text-xl my-0.5">{w.icon}</span>
+                   <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-black">{w.max}°</span>
+                      <span className="text-[9px] font-bold text-gray-500">{w.min}°</span>
+                   </div>
                  </div>
-               </div>
-             ))}
-          </div>
-        ) : null}
+               ))}
+             </div>
+           ) : (
+             <div className="py-2 text-center text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">
+                City Conditions Active
+             </div>
+           )}
+        </div>
+
+        {/* C. Dynamic Interactive Events Feed */}
+        <div className="space-y-2 relative z-10">
+           <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2 px-1">Curated Experiences</h3>
+           {eventsLoading ? (
+             [1, 2].map(i => <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse" />)
+           ) : eventsData?.events?.map((ev: any) => {
+             const route = resolveEventRoute(ev);
+             return (
+               <Link 
+                  key={ev.id} 
+                  href={route} 
+                  className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 active:scale-[0.98] transition-all group/item border border-transparent hover:border-white/5"
+               >
+                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl group-hover/item:scale-110 transition-transform shadow-inner overflow-hidden relative">
+                    {ev.imageUrl ? (
+                      <VerifiedImage src={ev.imageUrl} alt={ev.title} className="w-full h-full object-cover blur-none group-hover/item:blur-[2px]" entityType="tour" showBadge={false} />
+                    ) : (
+                      <span className="relative z-10">{ev.icon || "🗓️"}</span>
+                    )}
+                    {ev.imageUrl && <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-lg z-10">{ev.icon}</div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h4 className="text-sm font-black text-white truncate">{ev.title}</h4>
+                      {(ev.isFeatured || ev.badgeLabel === "Tonight") && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse shadow-[0_0_8px_#D4AF37]" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-gray-400 font-medium leading-tight line-clamp-1 italic opacity-80">
+                      {ev.shortDescription}
+                    </p>
+                  </div>
+                  <div className="shrink-0 flex flex-col items-end gap-2">
+                    <ActionButtonGroup 
+                        variant="compact"
+                        item={{
+                            id: ev.id,
+                            slug: ev.slug,
+                            title: ev.title,
+                            type: "event",
+                            category: ev.category,
+                            imageUrl: ev.imageUrl,
+                            shortDescription: ev.shortDescription
+                        }}
+                    />
+                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
+                      ev.badgeLabel === "Tonight" || ev.badgeLabel === "Starting soon" 
+                        ? "bg-[#D4AF37] text-[#1A1A2E]" 
+                        : "bg-white/5 text-gray-400 border border-white/10"
+                    }`}>
+                      {ev.badgeLabel}
+                    </span>
+                  </div>
+               </Link>
+             );
+           })}
+        </div>
       </div>
 
       {/* Editorial picks — horizontal scroll */}
       <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 px-1">
-        {editorialPicks.map((pick, i) => (
+        {[
+          { emoji: "☕", title: "Coffee Ceremony 101", desc: "Experience Ethiopia's most sacred daily ritual.", link: "/coffee-passport", color: "from-amber-500 to-orange-600" },
+          { emoji: "🎵", title: "Live Jazz Nights", desc: "Find the best Ethiopian jazz clubs in Bole.", link: "/dining", color: "from-purple-500 to-indigo-600" },
+          { emoji: "🏛️", title: "Heritage Walk", desc: "Piazza's colonial architecture & hidden cafés.", link: "/tours", color: "from-emerald-500 to-teal-600" },
+          { emoji: "🌄", title: "Entoto Escapes", desc: "Eucalyptus forests 20 min from the city center.", link: "/tours", color: "from-sky-500 to-blue-600" },
+        ].map((pick: any, i: number) => (
           <Link
             key={i}
             href={pick.link}
-            className="shrink-0 w-[200px] bg-gradient-to-br rounded-2xl p-4 text-white shadow-lg hover:scale-[1.02] transition-transform"
-            style={{ backgroundImage: `linear-gradient(135deg, var(--tw-gradient-from), var(--tw-gradient-to))` }}
+            className={`shrink-0 w-[200px] bg-gradient-to-br rounded-[2rem] p-4 text-white shadow-xl hover:scale-[1.02] transition-transform ${pick.color}`}
           >
-            <div className={`w-full h-full rounded-2xl bg-gradient-to-br ${pick.color} p-4`}>
-              <span className="text-2xl">{pick.emoji}</span>
-              <h3 className="text-sm font-black mt-2 leading-tight">{pick.title}</h3>
-              <p className="text-[10px] font-medium mt-1 opacity-80 leading-snug">{pick.desc}</p>
-            </div>
+            <span className="text-2xl">{pick.emoji}</span>
+            <h3 className="text-sm font-black mt-2 leading-tight">{pick.title}</h3>
+            <p className="text-[10px] font-medium mt-1 opacity-80 leading-snug">{pick.desc}</p>
           </Link>
         ))}
       </div>
@@ -847,39 +986,30 @@ function ThisWeekInAddis() {
 }
 
 export default function HomePage() {
-
   return (
-
-    <div className="pb-8">
-
+    <div className="pb-8 space-y-8">
       <HeroSection />
-
       
-
+      {/* 2. Essentials Hub (Bole Card) */}
       <AirportUtilityCard />
 
-      
+      {/* 3. Now Section (Featured + Secondary + Browse) */}
+      <WhatIsHappeningNow />
 
-      <CategorySection />
-
+      {/* Browsing & Experience Sections */}
       <ThisWeekInAddis />
-
-
 
       <FeaturedStays />
 
-      
-
       <TopExperiences />
 
+      {/* 5. Final Action Hooks (Stay & Plan) */}
+      <FinalActionTiles />
 
-
+      {/* Footer Recommendations */}
       <AiRecommendations />
-
     </div>
-
   );
-
 }
 
 

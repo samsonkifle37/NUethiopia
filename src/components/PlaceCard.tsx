@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { MapPin, Star, ExternalLink, ShieldCheck } from "lucide-react";
 import { VerifiedImage } from "@/components/media/VerifiedImage";
+import { ActionButtonGroup } from "@/components/ActionButtonGroup";
 
 interface PlaceCardProps {
     slug: string;
@@ -97,6 +98,22 @@ export function PlaceCard({
                             <ShieldCheck className="w-2.5 h-2.5 text-amber-500" /> Owner Verified
                         </span>
                     )}
+                </div>
+                
+                {/* Save/Share Actions */}
+                <div className="absolute top-4 right-4 z-20">
+                    <ActionButtonGroup 
+                        variant="compact"
+                        item={{
+                            id: slug, // Using slug as id if proper id not passed, but usually slug works for lookup
+                            slug: slug,
+                            title: name,
+                            type: "place",
+                            category: type,
+                            imageUrl: heroImage,
+                            shortDescription: shortDescription || ""
+                        }}
+                    />
                 </div>
 
             </div>
