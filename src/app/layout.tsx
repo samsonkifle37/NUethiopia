@@ -1,8 +1,9 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Providers } from "./providers";
 import { BottomNav } from "@/components/BottomNav";
 import { Onboarding } from "@/components/Onboarding";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ConditionalMain } from "@/components/ConditionalMain";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -57,9 +58,9 @@ export default function RootLayout({
       <body className="bg-surface text-brand-dark antialiased" suppressHydrationWarning>
         <LanguageProvider>
         <Providers>
-          <main className="max-w-lg mx-auto min-h-screen pb-24 px-4">
+          <ConditionalMain>
             {children}
-          </main>
+          </ConditionalMain>
           <Onboarding />
           <BottomNav />
         </Providers>

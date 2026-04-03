@@ -7,13 +7,15 @@ interface User {
     name: string;
     email: string;
     bio?: string;
+    accountType?: string;
+    isEmailVerified?: boolean;
 }
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<{ error?: string }>;
-    register: (name: string, email: string, password: string) => Promise<{ error?: string }>;
+    register: (name: string, email: string, password: string, accountType?: string, businessName?: string) => Promise<{ error?: string, message?: string }>;
     logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
 }
@@ -52,16 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return {};
     };
 
-    const register = async (name: string, email: string, password: string) => {
+    const register = async (name: string, email: string, password: string, accountType: string = "user", businessName?: string) => {
         const res = await fetch("/api/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }),
+            body: JSON.stringify({ name, email, password, accountType, businessName }),
         });
         const data = await res.json();
         if (!res.ok) return { error: data.error || "Registration failed" };
         setUser(data.user);
-        return {};
+        return { message: data.message };
     };
 
     const logout = async () => {

@@ -7,15 +7,27 @@ datasource db {
 }
 
 model User {
-  id                  String                 @id @default(uuid())
-  name                String
-  email               String                 @unique
-  passwordHash        String
-  roles               String[]               @default(["traveller"])
-  languages           String[]               @default(["en"])
-  bio                 String?
-  createdAt           DateTime               @default(now())
-  updatedAt           DateTime               @updatedAt
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  passwordHash    String
+  phone           String?
+  isEmailVerified Boolean  @default(false)
+  accountType     String   @default("user") // admin, user, host, business
+  roles           String[] @default(["traveller"])
+  languages       String[] @default(["en"])
+  bio             String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  verificationTokens  VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  businessProfile     BusinessProfile?
+  paymentCustomer     PaymentCustomer?
+  subscriptions       Subscription[]
+  stayListings        StayListing[]
+  notificationLogs    NotificationLog[]
+
   favorites           Favorite[]
   reviews             Review[]
   ownerClaims         OwnerClaim[]
@@ -24,16 +36,190 @@ model User {
   itineraries         Itinerary[]
 }
 
+model VerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model BusinessProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName    String
+  taxId           String?
+  website         String?
+  businessAddress String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ── Monetisation schema ────────────
+model PaymentCustomer {
+  id               String               @id @default(uuid())
+  userId           String               @unique
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId String?              @unique
+  paypalCustomerId String?              @unique
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  transactions     PaymentTransaction[]
+}
+
+model SubscriptionPlan {
+  id            String         @id @default(uuid())
+  name          String // e.g. "Featured Host", "Basic"
+  priceMonthly  Float
+  currency      String         @default("USD")
+  maxListings   Int
+  isFeatured    Boolean        @default(false)
+  stripePriceId String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                   String           @id @default(uuid())
+  userId               String
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId               String
+  plan                 SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  status               String // ACTIVE, CANCELED, PAST_DUE
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean          @default(false)
+  stripeSubscriptionId String?          @unique
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+model PaymentTransaction {
+  id              String          @id @default(uuid())
+  customerId      String
+  customer        PaymentCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount          Float
+  currency        String
+  status          String // SUCCEEDED, FAILED, PENDING
+  stripePaymentId String?         @unique
+  description     String?
+  createdAt       DateTime        @default(now())
+}
+
+// ── Admin & Logging ────────────
+model EmailLog {
+  id           String   @id @default(uuid())
+  to           String
+  subject      String
+  body         String?
+  status       String // SENT, FAILED
+  errorMessage String?
+  createdAt    DateTime @default(now())
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  type      String // SIGNUP, LISTING_SUBMITTED
+  message   String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AdminActionLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String // APPROVED_LISTING, REJECTED_LISTING, BANNED_USER
+  targetId  String // The ID of the listing or user affected
+  details   Json?
+  createdAt DateTime @default(now())
+}
+
+// ── STAYS Listings ────────────
+model StayListing {
+  id      String @id @default(uuid())
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  propertyName String
+  listingType  String // Hotel, Apartment, Guesthouse, Resort, Villa
+  description  String
+
+  fullAddress String
+  city        String
+  region      String?
+  latitude    Float?
+  longitude   Float?
+
+  contactPhone String?
+  contactEmail String?
+  website      String?
+
+  amenities       String[] @default([])
+  numberOfRooms   Int?
+  priceRange      String?
+  currency        String   @default("ETB")
+  checkInTime     String?
+  checkOutTime    String?
+  houseRules      String?
+  nearbyLandmarks String?
+  socialLinks     Json?
+
+  coverImage String?
+
+  status          String  @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, SUSPENDED
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images            StayListingImage[]
+  submissionHistory ListingSubmissionHistory[]
+}
+
+model StayListingImage {
+  id            String      @id @default(uuid())
+  stayListingId String
+  stayListing   StayListing @relation(fields: [stayListingId], references: [id], onDelete: Cascade)
+  imageUrl      String
+  isCover       Boolean     @default(false)
+  priority      Int         @default(0)
+  createdAt     DateTime    @default(now())
+}
+
+model ListingSubmissionHistory {
+  id            String      @id @default(uuid())
+  stayListingId String
+  stayListing   StayListing @relation(fields: [stayListingId], references: [id], onDelete: Cascade)
+  action        String // SUBMITTED, APPROVED, REJECTED, REQUEST_CHANGES
+  notes         String?
+  adminId       String?
+  createdAt     DateTime    @default(now())
+}
+
 model Place {
-  id               String       @id @default(uuid())
-  type             String       // hotel, guesthouse, apartment, tour, restaurant, club, resort
+  id               String   @id @default(uuid())
+  type             String // hotel, guesthouse, apartment, tour, restaurant, club, resort
   name             String
-  slug             String       @unique
+  slug             String   @unique
   shortDescription String?
   longDescription  String?
   city             String
-  area             String       @default("")
-  country          String       @default("Ethiopia")
+  area             String   @default("")
+  country          String   @default("Ethiopia")
   latitude         Float?
   longitude        Float?
   websiteUrl       String?
@@ -41,39 +227,39 @@ model Place {
   googleMapsUrl    String?
   phone            String?
   email            String?
-  tags             String[]     @default([])
-  source           String       @default("manual-seed")
-  status           String       @default("APPROVED")
+  tags             String[] @default([])
+  source           String   @default("manual-seed")
+  status           String   @default("APPROVED")
   priceLevel       String?
   neighborhood     String?
-  featured         Boolean      @default(false)
-  isActive         Boolean      @default(true)
-  
+  featured         Boolean  @default(false)
+  isActive         Boolean  @default(true)
+
   // Pipeline Enrichment Fields
-  verificationLevel Int         @default(30)
-  verificationScore Int         @default(30)
-  visualScore       Int         @default(0)
-  claimable         Boolean     @default(true)
+  verificationLevel Int       @default(30)
+  verificationScore Int       @default(30)
+  visualScore       Int       @default(0)
+  claimable         Boolean   @default(true)
   brandName         String?
   subcategory       String?
   district          String?
   fullAddress       String?
   whatsapp          String?
   openingHours      Json?
-  currency          String      @default("ETB")
-  reviewCount       Int         @default(0)
-  sourceCount       Int         @default(0)
+  currency          String    @default("ETB")
+  reviewCount       Int       @default(0)
+  sourceCount       Int       @default(0)
   bookingLink       String?
   socialLinks       Json?
-  highlights        String[]    @default([])
-  amenities         String[]    @default([])
-  ownerVerified     Boolean     @default(false)
+  highlights        String[]  @default([])
+  amenities         String[]  @default([])
+  ownerVerified     Boolean   @default(false)
   ownerId           String?
   claimedAt         DateTime?
   lastCheckedAt     DateTime?
-  
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   images              PlaceImage[]
   favorites           Favorite[]
   reviews             Review[]
@@ -84,31 +270,31 @@ model Place {
   visits              PlaceVisit[]
   itineraryActivities ItineraryActivity[]
 
-  placeSources        PlaceSource[]
-  verificationLogs    VerificationLog[]
+  placeSources     PlaceSource[]
+  verificationLogs VerificationLog[]
 }
 
 model PlaceSource {
-  id              String   @id @default(uuid())
-  placeId         String
-  url             String
-  sourceName      String   // booking, google, tripadvisor, official, wikimedia
-  sourceType      String   // Tier A, Tier B, Tier C
-  rawJson         Json?
-  scrapedAt       DateTime @default(now())
-  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  placeId    String
+  url        String
+  sourceName String // booking, google, tripadvisor, official, wikimedia
+  sourceType String // Tier A, Tier B, Tier C
+  rawJson    Json?
+  scrapedAt  DateTime @default(now())
+  place      Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
 
   @@unique([placeId, url])
 }
 
 model VerificationLog {
-  id              String   @id @default(uuid())
-  placeId         String
-  scoreChange     Int
-  reason          String
-  newScore        Int
-  createdAt       DateTime @default(now())
-  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  placeId     String
+  scoreChange Int
+  reason      String
+  newScore    Int
+  createdAt   DateTime @default(now())
+  place       Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
 }
 
 model DuplicateCandidate {
@@ -120,31 +306,30 @@ model DuplicateCandidate {
   createdAt       DateTime @default(now())
 }
 
-
 model PlaceImage {
   id            String    @id @default(uuid())
   placeId       String
   place         Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
   imageUrl      String
-  imageSource   String?   // official, wikimedia, tripadvisor, maps, unsplash
-  sourcePageUrl String?   // the page where the image was found
+  imageSource   String? // official, wikimedia, tripadvisor, maps, unsplash
+  sourcePageUrl String? // the page where the image was found
   altText       String?
-  priority      Int       @default(0)  // 0 = hero, higher = gallery
+  priority      Int       @default(0) // 0 = hero, higher = gallery
   createdAt     DateTime  @default(now())
   verifiedAt    DateTime?
 
   // Pipeline Quality Fields
-  status          String    @default("PENDING") // PENDING, APPROVED, REJECTED, FAILED
-  qualityScore    Int       @default(0)
-  isMirrored      Boolean   @default(false)
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, FAILED
+  qualityScore    Int      @default(0)
+  isMirrored      Boolean  @default(false)
   mirroredUrl     String?
   width           Int?
   height          Int?
-  hash            String?   
-  labels          String[]  @default([])
+  hash            String?
+  labels          String[] @default([])
   rejectionReason String?
 
-  imageTruthType  String    @default("place_real") // place_real, representative, placeholder
+  imageTruthType String @default("place_real") // place_real, representative, placeholder
 }
 
 model PlaceImageError {
@@ -157,19 +342,19 @@ model PlaceImageError {
 }
 
 model ImageAudit {
-  id              String   @id @default(uuid())
-  entityType      String   // place, stay, tour, dining, nightlife
-  entityId        String
-  name            String
-  imageUrl        String?
-  status          String   @default("pending") // ok, missing, broken, blocked, not_image, too_small
-  httpCode        Int?
-  notes           String?
-  source          String?  // official, wikimedia, tripadvisor, maps, unsplash
-  sourcePageUrl   String?
-  dimensions      String?  // e.g. 1920x1080
-  checkedAt       DateTime @default(now())
-  verifiedAt      DateTime?
+  id            String    @id @default(uuid())
+  entityType    String // place, stay, tour, dining, nightlife
+  entityId      String
+  name          String
+  imageUrl      String?
+  status        String    @default("pending") // ok, missing, broken, blocked, not_image, too_small
+  httpCode      Int?
+  notes         String?
+  source        String? // official, wikimedia, tripadvisor, maps, unsplash
+  sourcePageUrl String?
+  dimensions    String? // e.g. 1920x1080
+  checkedAt     DateTime  @default(now())
+  verifiedAt    DateTime?
 
   @@index([status])
   @@index([entityType, entityId])
@@ -181,20 +366,20 @@ model Review {
   place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rating    Int      // 1-5
+  rating    Int // 1-5
   title     String?
   body      String?
   createdAt DateTime @default(now())
 }
 
 model Favorite {
-  id           String                    @id @default(uuid())
-  userId       String
-  user         User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  placeId      String
-  place        Place                     @relation(fields: [placeId], references: [id], onDelete: Cascade)
-  createdAt    DateTime                  @default(now())
-  collections  FavoriteInCollection[]
+  id          String                 @id @default(uuid())
+  userId      String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placeId     String
+  place       Place                  @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime               @default(now())
+  collections FavoriteInCollection[]
 
   @@unique([userId, placeId])
 }
@@ -239,19 +424,19 @@ model HostListing {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
-  images           HostListingImage[]
-  linkedPlace      Place?            @relation(fields: [linkedPlaceId], references: [id])
+  images      HostListingImage[]
+  linkedPlace Place?             @relation(fields: [linkedPlaceId], references: [id])
 
   @@index([status])
 }
 
 model HostListingImage {
-  id             String      @id @default(uuid())
-  hostListingId  String
-  hostListing    HostListing @relation(fields: [hostListingId], references: [id], onDelete: Cascade)
-  imageUrl       String
-  altText        String?
-  createdAt      DateTime    @default(now())
+  id            String      @id @default(uuid())
+  hostListingId String
+  hostListing   HostListing @relation(fields: [hostListingId], references: [id], onDelete: Cascade)
+  imageUrl      String
+  altText       String?
+  createdAt     DateTime    @default(now())
 }
 
 // ── Ingestion Foundry (Listing Factory) ────────────
@@ -263,55 +448,55 @@ enum IngestionStatus {
 }
 
 model IngestionListing {
-  id                String          @id @default(uuid())
-  name              String
-  slug              String          @unique
-  category          String
-  subcategory       String?
-  city              String
-  district          String?
-  country           String          @default("Ethiopia")
-  lat               Float?
-  lng               Float?
-  address           String?
-  website           String?
-  phone             String?
-  sourceSummary     Json?
-  shortDescription  String?
-  longDescription   String?
-  tags              String[]        @default([])
-  seoTitle          String?
-  seoDescription    String?
-  imageUrls         String[]        @default([])
-  confidenceScore   Float           @default(0.0)
-  status            IngestionStatus @default(DRAFT)
-  
-  sourceProvenance  Json?
-  
-  placeId           String?         @unique
-  place             Place?          @relation(fields: [placeId], references: [id])
-  
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  lastRefreshAt     DateTime?
+  id               String          @id @default(uuid())
+  name             String
+  slug             String          @unique
+  category         String
+  subcategory      String?
+  city             String
+  district         String?
+  country          String          @default("Ethiopia")
+  lat              Float?
+  lng              Float?
+  address          String?
+  website          String?
+  phone            String?
+  sourceSummary    Json?
+  shortDescription String?
+  longDescription  String?
+  tags             String[]        @default([])
+  seoTitle         String?
+  seoDescription   String?
+  imageUrls        String[]        @default([])
+  confidenceScore  Float           @default(0.0)
+  status           IngestionStatus @default(DRAFT)
+
+  sourceProvenance Json?
+
+  placeId String? @unique
+  place   Place?  @relation(fields: [placeId], references: [id])
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastRefreshAt DateTime?
 }
 
 // ── Owner Claim + Photo Upload ────────────
 model OwnerClaim {
-  id              String   @id @default(uuid())
-  placeId         String
-  userId          String?
-  fullName        String
-  email           String
-  phone           String
-  relationship    String   @default("owner")
-  proofNote       String?
-  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, NEEDS_REVIEW
-  submittedAt     DateTime @default(now())
-  resolvedAt      DateTime?
-  
-  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
-  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id           String    @id @default(uuid())
+  placeId      String
+  userId       String?
+  fullName     String
+  email        String
+  phone        String
+  relationship String    @default("owner")
+  proofNote    String?
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED, NEEDS_REVIEW
+  submittedAt  DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([placeId])
   @@index([status])
@@ -319,15 +504,15 @@ model OwnerClaim {
 
 // ✈️ Check-In Journal ━━━━━━━━━━━━━━━━━━━━━━━━━━
 model PlaceVisit {
-  id          String    @id @default(uuid())
-  userId      String
-  placeId     String
-  visitedAt   DateTime  @default(now())
-  note        String?   // optional journal note
-  rating      Int?      // optional 1-5 quick rating
+  id        String   @id @default(uuid())
+  userId    String
+  placeId   String
+  visitedAt DateTime @default(now())
+  note      String? // optional journal note
+  rating    Int? // optional 1-5 quick rating
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  place       Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([placeId])
@@ -335,30 +520,30 @@ model PlaceVisit {
 
 // ── User Collections (Favorites Organization) ────────────
 model FavoriteCollection {
-  id          String     @id @default(uuid())
+  id          String                 @id @default(uuid())
   userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   description String?
   emoji       String?
   color       String?
-  isDefault   Boolean    @default(false)
+  isDefault   Boolean                @default(false)
   favorites   FavoriteInCollection[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
 
   @@unique([userId, name])
   @@index([userId])
 }
 
 model FavoriteInCollection {
-  id           String                @id @default(uuid())
+  id           String             @id @default(uuid())
   collectionId String
-  collection   FavoriteCollection    @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collection   FavoriteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   favoriteId   String
-  favorite     Favorite              @relation(fields: [favoriteId], references: [id], onDelete: Cascade)
-  orderIndex   Int                   @default(0)
-  addedAt      DateTime              @default(now())
+  favorite     Favorite           @relation(fields: [favoriteId], references: [id], onDelete: Cascade)
+  orderIndex   Int                @default(0)
+  addedAt      DateTime           @default(now())
 
   @@unique([collectionId, favoriteId])
   @@index([collectionId])
@@ -367,68 +552,68 @@ model FavoriteInCollection {
 
 // ── Itinerary System (Trip Planning) ────────────
 model Itinerary {
-  id              String            @id @default(uuid())
-  userId          String
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title           String
-  description     String?
-  city            String
-  startDate       DateTime?
-  endDate         DateTime?
-  durationDays    Int               @default(3)
-  isPublished     Boolean           @default(false)
-  days            ItineraryDay[]
-  shareLink       ItineraryShare?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id           String          @id @default(uuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  city         String
+  startDate    DateTime?
+  endDate      DateTime?
+  durationDays Int             @default(3)
+  isPublished  Boolean         @default(false)
+  days         ItineraryDay[]
+  shareLink    ItineraryShare?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@index([userId])
   @@index([isPublished])
 }
 
 model ItineraryDay {
-  id            String       @id @default(uuid())
-  itineraryId   String
-  itinerary     Itinerary    @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  dayNumber     Int
-  title         String?
-  description   String?
-  activities    ItineraryActivity[]
-  orderIndex    Int          @default(0)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id          String              @id @default(uuid())
+  itineraryId String
+  itinerary   Itinerary           @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  dayNumber   Int
+  title       String?
+  description String?
+  activities  ItineraryActivity[]
+  orderIndex  Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   @@unique([itineraryId, dayNumber])
   @@index([itineraryId])
 }
 
 model ItineraryActivity {
-  id          String        @id @default(uuid())
-  dayId       String
-  day         ItineraryDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
-  placeId     String
-  place       Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
-  timeSlot    String?
-  notes       String?
-  orderIndex  Int           @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id         String       @id @default(uuid())
+  dayId      String
+  day        ItineraryDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  placeId    String
+  place      Place        @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  timeSlot   String?
+  notes      String?
+  orderIndex Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   @@index([dayId])
   @@index([placeId])
 }
 
 model ItineraryShare {
-  id            String      @id @default(uuid())
-  itineraryId   String      @unique
-  itinerary     Itinerary   @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  shareToken    String      @unique @default(cuid())
-  isPublic      Boolean     @default(true)
-  expiresAt     DateTime?
-  viewCount     Int         @default(0)
-  lastViewedAt  DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id           String    @id @default(uuid())
+  itineraryId  String    @unique
+  itinerary    Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  shareToken   String    @unique @default(cuid())
+  isPublic     Boolean   @default(true)
+  expiresAt    DateTime?
+  viewCount    Int       @default(0)
+  lastViewedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([shareToken])
   @@index([itineraryId])

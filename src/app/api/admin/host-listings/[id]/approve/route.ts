@@ -43,9 +43,9 @@ export async function POST(
 
     const { id } = await params;
 
-    const listing = await prisma.hostListing.findUnique({
+    const listing = await prisma.stayListing.findUnique({
         where: { id },
-        include: { images: true },
+        include: { images: true, owner: true },
     });
 
     if (!listing) {
@@ -60,7 +60,7 @@ export async function POST(
     }
 
     // 1. Generate slug
-    const slug = listing.title
+    const slug = listing.propertyName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
@@ -72,18 +72,18 @@ export async function POST(
     // 2. Create Place from listing
     const place = await prisma.place.create({
         data: {
-            type: mapPlaceType(listing.placeType),
-            name: listing.title,
+            type: listing.listingType.toLowerCase(),
+            name: listing.propertyName,
             slug: finalSlug,
             shortDescription: listing.description.substring(0, 200),
             longDescription: listing.description,
             city: listing.city,
-            area: listing.area,
-            country: listing.country,
-            phone: listing.hostPhone,
-            email: listing.hostEmail,
+            area: listing.region || "",
+            country: "Ethiopia",
+            phone: listing.contactPhone,
+            email: listing.contactEmail,
             tags: [
-                listing.placeType.toLowerCase().replace("_", "-"),
+                listing.listingType.toLowerCase().replace("_", "-"),
                 "hosted-home",
                 listing.city.toLowerCase(),
             ],
@@ -98,21 +98,23 @@ export async function POST(
             data: listing.images.map((img, index) => ({
                 placeId: place.id,
                 imageUrl: img.imageUrl,
-                altText: img.altText || listing.title,
+                altText: listing.propertyName,
                 priority: index,
             })),
         });
     }
 
-    // 4. Update HostListing
-    const updated = await prisma.hostListing.update({
+    // 4. Update StayListing
+    const updated = await prisma.stayListing.update({
         where: { id },
         data: {
-            status: "APPROVED",
-            approvedByUserId: admin.userId,
-            approvedAt: new Date(),
-            linkedPlaceId: place.id,
+            status: "APPROVED"
         },
+    });
+    
+    // Add history
+    await prisma.listingSubmissionHistory.create({
+       data: { stayListingId: id, action: "APPROVED", adminId: admin.userId }
     });
 
     return NextResponse.json({

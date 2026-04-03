@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Check user has admin role
     const user = await prisma.user.findUnique({ where: { id: admin.userId } });
-    if (!user || !user.roles.includes("admin")) {
+    if (!user || user.accountType !== "admin" && !user.roles?.includes("admin")) {
         return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
@@ -37,13 +37,37 @@ export async function GET(request: NextRequest) {
         where.status = status;
     }
 
-    const listings = await prisma.hostListing.findMany({
+    const dbListings = await prisma.stayListing.findMany({
         where,
         include: {
-            images: { take: 1 },
+            images: { take: 1, orderBy: { priority: "asc" } },
+            owner: true
         },
         orderBy: { createdAt: "desc" },
     });
+
+    // Map to expected frontend format
+    const listings = dbListings.map(l => ({
+        id: l.id,
+        status: l.status,
+        placeType: l.listingType,
+        title: l.propertyName,
+        description: l.description,
+        city: l.city,
+        area: l.region || "",
+        maxGuests: l.numberOfRooms || 2,
+        bedrooms: l.numberOfRooms || 1,
+        beds: l.numberOfRooms || 1,
+        bathrooms: 1,
+        pricePerNight: l.priceRange ? parseFloat(l.priceRange) : 0,
+        amenities: l.amenities,
+        hostName: l.owner.name,
+        hostEmail: l.owner.email,
+        hostPhone: l.contactPhone || "",
+        rejectionReason: l.rejectionReason,
+        createdAt: l.createdAt.toISOString(),
+        images: l.images.map(img => ({ id: img.id, imageUrl: img.imageUrl, altText: null }))
+    }));
 
     return NextResponse.json({ listings });
 }

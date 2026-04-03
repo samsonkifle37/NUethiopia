@@ -131,14 +131,27 @@ export default function AdminHostListingsPage() {
         );
     }
 
-    if (!user) {
+    if (!user || user.accountType !== "admin") {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-                <Shield className="w-16 h-16 text-gray-200" />
-                <h2 className="text-xl font-black text-gray-900">Admin Only</h2>
-                <p className="text-sm text-gray-500 font-medium">
-                    Sign in with an admin account to access this page.
-                </p>
+            <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-red-50 rounded-[2.5rem] flex items-center justify-center border border-red-100 shadow-xl shadow-red-500/5">
+                    <Shield className="w-10 h-10 text-red-500" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">Restricted Access</h2>
+                    <p className="text-sm text-gray-400 font-bold max-w-sm mx-auto leading-relaxed">
+                        {user 
+                            ? `Your account (${user.email}) does not have administrative permissions. Please switch to a root account.` 
+                            : "Authentication required to access the Governance suite."}
+                    </p>
+                </div>
+                <div className="flex items-center gap-4">
+                    {!user ? (
+                         <a href="/auth" className="px-8 py-3.5 bg-[#1A1612] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#1A1612]/20 hover:scale-105 active:scale-95 transition-all">Sign In</a>
+                    ) : (
+                         <button onClick={() => window.location.href = '/auth'} className="px-8 py-3.5 bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 active:scale-95 transition-all">Switch Account</button>
+                    )}
+                </div>
             </div>
         );
     }
@@ -325,20 +338,18 @@ export default function AdminHostListingsPage() {
 
     const listings: HostListing[] = data?.listings || [];
 
-    // ── List View ──
     return (
-        <div className="space-y-6 pt-4 pb-10">
-            {/* Header */}
-            <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                    <Shield className="w-6 h-6 text-ethiopia-green" />
-                    <h1 className="text-2xl font-black tracking-tight">
-                        Host Listings
-                    </h1>
+        <div className="space-y-10 animate-in fade-in duration-700 w-full pb-20">
+            {/* Header Area */}
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-10">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3 mb-2">
+                        <span className="w-12 h-1.5 bg-[#D4AF37] rounded-full"></span>
+                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#D4AF37]">Governance</span>
+                    </div>
+                    <h1 className="text-5xl font-black text-[#1A1612] tracking-tighter uppercase leading-none">Host Submissions</h1>
+                    <p className="text-gray-400 font-medium text-sm mt-4 italic">Active verification pipeline for platform inventory.</p>
                 </div>
-                <p className="text-brand-muted text-sm font-medium italic">
-                    Review and manage host submissions
-                </p>
             </div>
 
             {/* Status Filter */}
@@ -380,50 +391,70 @@ export default function AdminHostListingsPage() {
                     </p>
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {listings.map((listing: HostListing) => (
-                        <button
-                            key={listing.id}
-                            onClick={() => fetchDetail(listing.id)}
-                            className="w-full bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow text-left flex gap-4"
-                        >
-                            {/* Thumbnail */}
-                            <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                                {listing.images[0] ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                        src={listing.images[0].imageUrl}
-                                        alt={listing.title}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-2xl">
-                                        🏠
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0 space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-sm font-bold text-gray-900 truncate">
-                                        {listing.title}
-                                    </h3>
-                                    <span
-                                        className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border flex-shrink-0 ${statusColors[listing.status]}`}
-                                    >
-                                        {listing.status}
-                                    </span>
-                                </div>
-                                <p className="text-[10px] text-gray-400 font-bold">
-                                    {placeTypeLabels[listing.placeType]} · {listing.city} ·{" "}
-                                    ${listing.pricePerNight}/night
-                                </p>
-                                <p className="text-[10px] text-gray-400 font-medium">
-                                    Host: {listing.hostName}
-                                </p>
-                            </div>
-                            <Eye className="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" />
-                        </button>
-                    ))}
+                <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-gray-100 bg-gray-50/50">
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Property</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Type / Location</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Host</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Pricing</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                                    <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {listings.map((listing: HostListing) => (
+                                    <tr key={listing.id} className="hover:bg-gray-50/50 transition-colors group">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 border border-gray-200">
+                                                    {listing.images[0] ? (
+                                                        <img src={listing.images[0].imageUrl} alt="" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-xl">🏠</div>
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-black text-gray-900 truncate">{listing.title}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">ID: {listing.id.substring(0, 8)}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-xs font-bold text-gray-900">{placeTypeLabels[listing.placeType]}</p>
+                                            <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                                <MapPin className="w-3 h-3" /> {listing.city}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-xs font-bold text-gray-900">{listing.hostName}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 lowercase">{listing.hostEmail}</p>
+                                        </td>
+                                        <td className="px-6 py-4 text-xs font-black text-gray-900">
+                                            ${listing.pricePerNight}
+                                            <span className="text-[10px] text-gray-400 font-bold ml-1">/night</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusColors[listing.status]}`}>
+                                                {listing.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button 
+                                                onClick={() => fetchDetail(listing.id)}
+                                                className="p-2.5 bg-gray-100 text-gray-400 hover:text-[#1A1612] hover:bg-gray-200 rounded-xl transition-all"
+                                                title="View Detail"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 

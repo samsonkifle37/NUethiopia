@@ -25,13 +25,13 @@ export async function POST(
     }
 
     const user = await prisma.user.findUnique({ where: { id: admin.userId } });
-    if (!user || !user.roles.includes("admin")) {
+    if (!user || user.accountType !== "admin" && !user.roles?.includes("admin")) {
         return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
     const { id } = await params;
 
-    const listing = await prisma.hostListing.findUnique({ where: { id } });
+    const listing = await prisma.stayListing.findUnique({ where: { id } });
 
     if (!listing) {
         return NextResponse.json({ error: "Listing not found" }, { status: 404 });
@@ -52,12 +52,16 @@ export async function POST(
         // No body is fine
     }
 
-    const updated = await prisma.hostListing.update({
+    const updated = await prisma.stayListing.update({
         where: { id },
         data: {
             status: "REJECTED",
             rejectionReason: reason,
         },
+    });
+
+    await prisma.listingSubmissionHistory.create({
+        data: { stayListingId: id, action: "REJECTED", adminId: admin.userId, notes: reason }
     });
 
     return NextResponse.json({

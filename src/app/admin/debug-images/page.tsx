@@ -4,7 +4,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Image from "next/image";
-import { CheckCircle, XCircle, ImageIcon } from "lucide-react";
+import { CheckCircle, XCircle, ImageIcon, Search } from "lucide-react";
 
 export default function DebugImagesPage() {
     const [filter, setFilter] = useState("");
@@ -19,22 +19,32 @@ export default function DebugImagesPage() {
     ) || [];
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-8 min-h-screen bg-gray-50">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-black tracking-tight">Image Debug Dashboard</h1>
-                <p className="text-gray-500">Live audit of all entity images across the app.</p>
+        <div className="space-y-10 animate-in fade-in duration-700 h-full">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-2">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="w-10 h-1 bg-[#D4AF37] rounded-full"></span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37]">Visual Intelligence</span>
+                    </div>
+                    <h1 className="text-4xl font-black text-[#1A1612] tracking-tighter uppercase whitespace-nowrap">Image Debug Hub</h1>
+                    <p className="text-gray-400 font-medium text-sm">Real-time audit of all platform assets.</p>
+                </div>
             </div>
 
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 sticky top-4 z-10 flex gap-4">
-                <input
-                    type="text"
-                    placeholder="Filter entities..."
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-brand-dark/10 outline-none"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                />
-                <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-400">
-                    <span>Total: {entities.length}</span>
+            <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm flex items-center gap-6">
+                <div className="relative flex-1 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#D4AF37] transition-colors" />
+                    <input
+                        type="text"
+                        placeholder="Filter entities by name..."
+                        className="w-full bg-gray-50 border border-transparent rounded-2xl py-3 pl-12 pr-6 text-sm font-bold focus:border-[#D4AF37]/30 focus:bg-white transition-all outline-none"
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                    />
+                </div>
+                <div className="px-6 py-3 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-3">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Inventory</span>
+                    <span className="text-sm font-black text-[#1A1612]">{entities.length.toLocaleString()} Items</span>
                 </div>
             </div>
 
@@ -43,7 +53,7 @@ export default function DebugImagesPage() {
                     <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-brand-dark" />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 pb-20">
                     {entities.map((entity: any) => (
                         <div key={entity.id} className="bg-white rounded-3xl p-4 shadow-xl shadow-gray-200/40 border border-white flex flex-col gap-4">
                             <div className="relative h-40 w-full rounded-2xl overflow-hidden bg-gray-100 group">

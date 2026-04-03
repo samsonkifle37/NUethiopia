@@ -31,6 +31,7 @@ import {
 
 
     ShieldAlert,
+    CheckCircle,
     User,
     Heart,
     Settings,
@@ -67,623 +68,216 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 // ── Auth Modal ──────────────────────────────
 
-
-
 function AuthModal({ onClose }: { onClose: () => void }) {
-
-
-
     const { login, register } = useAuth();
-
-
-
     const [mode, setMode] = useState<"login" | "register">("login");
-
-
-
+    const [accountType, setAccountType] = useState<"user" | "host">("user");
     const [name, setName] = useState("");
-
-
-
+    const [businessName, setBusinessName] = useState("");
     const [email, setEmail] = useState("");
-
-
-
     const [password, setPassword] = useState("");
-
-
-
     const [error, setError] = useState("");
-
-
-
+    const [successMsg, setSuccessMsg] = useState("");
     const [loading, setLoading] = useState(false);
 
-
-
-
-
-
-
     const handleSubmit = async (e: React.FormEvent) => {
-
-
-
         e.preventDefault();
-
-
-
         setError("");
-
-
-
+        setSuccessMsg("");
         setLoading(true);
 
-
-
-
-
-
-
         const result =
-
-
-
             mode === "login"
-
-
-
                 ? await login(email, password)
-
-
-
-                : await register(name, email, password);
-
-
-
-
-
-
+                : await register(name, email, password, accountType, accountType === "host" ? businessName : undefined);
 
         setLoading(false);
 
-
-
-
-
-
-
         if (result.error) {
-
-
-
             setError(result.error);
-
-
-
+        } else if (mode === "register") {
+            setSuccessMsg("✅ Registration successful! Check your email to verify your account.");
+            setTimeout(() => {
+                if (accountType === "host") {
+                    window.location.href = "/profile/host";
+                } else {
+                    onClose();
+                }
+            }, 3000);
         } else {
-
-
-
             onClose();
-
-
-
         }
-
-
-
     };
 
-
-
-
-
-
-
     return (
-
-
-
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-
-
-
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-
-
-
-
-
-
             <div className="relative bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md p-6 pb-10 animate-in slide-in-from-bottom duration-300">
-
-
-
                 {/* Close */}
-
-
-
                 <button
-
-
-
                     onClick={onClose}
-
-
-
-                    className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
-
-
-
+                    className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-
-
-
                     <X className="w-4 h-4 text-gray-500" />
-
-
-
                 </button>
 
-
-
-
-
-
-
-                {/* Header */}
-
-
-
-                <div className="text-center mb-6">
-
-
-
-                    <div className="w-14 h-14 mx-auto bg-gradient-to-br from-ethiopia-green to-emerald-400 rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-ethiopia-green/20">
-
-
-
-                        {mode === "login" ? (
-
-
-
-                            <LogIn className="w-7 h-7 text-white" />
-
-
-
-                        ) : (
-
-
-
-                            <UserPlus className="w-7 h-7 text-white" />
-
-
-
-                        )}
-
-
-
+                {/* Logo / Header */}
+                <div className="text-center mb-6 pt-2">
+                    <div className="w-14 h-14 bg-[#1A1612] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <span className="text-[#D4AF37] text-xl font-black">N</span>
                     </div>
-
-
-
-                    <h2 className="text-xl font-black tracking-tight">
-
-
-
+                    <h2 className="text-xl font-black tracking-tight text-gray-900">
                         {mode === "login" ? "Welcome Back" : "Create Account"}
-
-
-
                     </h2>
-
-
-
                     <p className="text-gray-400 text-xs mt-1 font-medium">
-
-
-
                         {mode === "login"
-
-
-
                             ? "Sign in to access your saved places & itineraries"
-
-
-
-                            : "Join AddisView to save your favorites"}
-
-
-
+                            : "Join NU to experience or host the best of Ethiopia"}
                     </p>
-
-
-
                 </div>
 
-
-
-
-
-
-
-                {/* Form */}
-
-
-
-                <form onSubmit={handleSubmit} className="space-y-3">
-
-
-
-                    {mode === "register" && (
-
-
-
-                        <div className="relative">
-
-
-
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-
-
-
-                            <input
-
-
-
-                                type="text"
-
-
-
-                                placeholder="Full name"
-
-
-
-                                value={name}
-
-
-
-                                onChange={(e) => setName(e.target.value)}
-
-
-
-                                required
-
-
-
-                                className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-ethiopia-green/20 focus:border-ethiopia-green/30 text-sm font-medium"
-
-
-
-                            />
-
-
-
-                        </div>
-
-
-
-                    )}
-
-
-
-
-
-
-
-                    <div className="relative">
-
-
-
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-
-
-
-                        <input
-
-
-
-                            type="email"
-
-
-
-                            placeholder="Email address"
-
-
-
-                            value={email}
-
-
-
-                            onChange={(e) => setEmail(e.target.value)}
-
-
-
-                            required
-
-
-
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-ethiopia-green/20 focus:border-ethiopia-green/30 text-sm font-medium"
-
-
-
-                        />
-
-
-
+                {/* Email verification success */}
+                {successMsg && (
+                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                        <p className="text-sm font-medium text-green-800 leading-snug">{successMsg}</p>
                     </div>
-
-
-
-
-
-
-
-                    <div className="relative">
-
-
-
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-
-
-
-                        <input
-
-
-
-                            type="password"
-
-
-
-                            placeholder="Password"
-
-
-
-                            value={password}
-
-
-
-                            onChange={(e) => setPassword(e.target.value)}
-
-
-
-                            required
-
-
-
-                            minLength={6}
-
-
-
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-ethiopia-green/20 focus:border-ethiopia-green/30 text-sm font-medium"
-
-
-
-                        />
-
-
-
-                    </div>
-
-
-
-
-
-
-
-                    {error && (
-
-
-
-                        <p className="text-ethiopia-red text-xs font-bold bg-red-50 px-4 py-2.5 rounded-xl">
-
-
-
-                            {error}
-
-
-
-                        </p>
-
-
-
-                    )}
-
-
-
-
-
-
-
-                    <button
-
-
-
-                        type="submit"
-
-
-
-                        disabled={loading}
-
-
-
-                        className="w-full bg-brand-dark text-white py-3.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors shadow-lg disabled:opacity-50"
-
-
-
-                    >
-
-
-
-                        {loading ? (
-
-
-
-                            <Loader2 className="w-4 h-4 animate-spin" />
-
-
-
-                        ) : mode === "login" ? (
-
-
-
-                            <>
-
-
-
-                                <LogIn className="w-4 h-4" /> Sign In
-
-
-
-                            </>
-
-
-
-                        ) : (
-
-
-
-                            <>
-
-
-
-                                <UserPlus className="w-4 h-4" /> Create Account
-
-
-
-                            </>
-
-
-
+                )}
+
+                {!successMsg && (
+                    <form onSubmit={handleSubmit} className="space-y-3">
+
+                        {/* Account type toggle — register only */}
+                        {mode === "register" && (
+                            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setAccountType("user")}
+                                    className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${accountType === "user" ? "bg-white shadow-sm text-black" : "text-gray-500 hover:text-black"}`}
+                                >
+                                    <User className="w-4 h-4" /> Traveller
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setAccountType("host")}
+                                    className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${accountType === "host" ? "bg-[#1A1612] text-[#D4AF37] shadow-sm" : "text-gray-500 hover:text-black"}`}
+                                >
+                                    <Settings className="w-4 h-4" /> Property Owner
+                                </button>
+                            </div>
                         )}
 
+                        {/* Name field */}
+                        {mode === "register" && (
+                            <div className="relative">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                                <input
+                                    type="text"
+                                    placeholder="Full name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                    className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37]/40 text-sm font-medium"
+                                />
+                            </div>
+                        )}
 
+                        {/* Business / Property name — host only */}
+                        {mode === "register" && accountType === "host" && (
+                            <div className="space-y-1">
+                                <div className="relative">
+                                    <Settings className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                                    <input
+                                        type="text"
+                                        placeholder="Business or Property Name"
+                                        value={businessName}
+                                        onChange={(e) => setBusinessName(e.target.value)}
+                                        required
+                                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37]/40 text-sm font-medium"
+                                    />
+                                </div>
+                                <p className="text-[10px] uppercase font-bold text-gray-400 pl-2">Applies to hotels, apartments & tours</p>
+                            </div>
+                        )}
 
-                    </button>
+                        {/* Email */}
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                            <input
+                                type="email"
+                                placeholder="Email address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37]/40 text-sm font-medium"
+                            />
+                        </div>
 
+                        {/* Password */}
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={6}
+                                className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20 focus:border-[#D4AF37]/40 text-sm font-medium"
+                            />
+                        </div>
 
+                        {error && (
+                            <p className="text-red-600 text-xs font-bold bg-red-50 px-4 py-2.5 rounded-xl border border-red-100">
+                                {error}
+                            </p>
+                        )}
 
-                </form>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-[#1A1612] text-[#D4AF37] py-4 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-colors disabled:opacity-50 mt-2"
+                        >
+                            {loading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : mode === "login" ? (
+                                <><LogIn className="w-4 h-4" /> Sign In</>
+                            ) : (
+                                <><UserPlus className="w-4 h-4" /> {accountType === "host" ? "Register as Host" : "Create Account"}</>
+                            )}
+                        </button>
+                    </form>
+                )}
 
-
-
-
-
-
-
-                {/* Toggle */}
-
-
-
+                {/* Toggle login/register */}
                 <p className="text-center text-xs text-gray-400 mt-5 font-medium">
-
-
-
                     {mode === "login" ? (
-
-
-
                         <>
-
-
-
                             Don&apos;t have an account?{" "}
-
-
-
                             <button
-
-
-
-                                onClick={() => { setMode("register"); setError(""); }}
-
-
-
-                                className="text-ethiopia-green font-bold"
-
-
-
+                                onClick={() => { setMode("register"); setError(""); setSuccessMsg(""); }}
+                                className="text-[#D4AF37] font-bold"
                             >
-
-
-
                                 Sign Up
-
-
-
                             </button>
-
-
-
                         </>
-
-
-
                     ) : (
-
-
-
                         <>
-
-
-
                             Already have an account?{" "}
-
-
-
                             <button
-
-
-
-                                onClick={() => { setMode("login"); setError(""); }}
-
-
-
-                                className="text-ethiopia-green font-bold"
-
-
-
+                                onClick={() => { setMode("login"); setError(""); setSuccessMsg(""); }}
+                                className="text-[#D4AF37] font-bold"
                             >
-
-
-
                                 Sign In
-
-
-
                             </button>
-
-
-
                         </>
-
-
-
                     )}
-
-
-
                 </p>
-
-
-
             </div>
-
-
-
         </div>
-
-
-
     );
-
-
-
 }
-
-
 
 
 
