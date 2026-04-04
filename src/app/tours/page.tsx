@@ -8,14 +8,14 @@ export const metadata = {
 export default function ToursPage() {
     return (
         <PlaceGrid
-            title="Tours & Experiences"
-            types="tour,tour_operator,guide,experience"
+            title="Tours & Dining"
+            types="tour,tour_operator,guide,experience,restaurant,coffee,club,nightlife"
             filterOptions={[
-                { value: "", label: "All Tours" },
-                { value: "tour", label: "Day Tours" },
-                { value: "tour_operator", label: "Operators" },
+                { value: "", label: "All" },
+                { value: "tour,tour_operator,guide,experience", label: "Tours" },
+                { value: "restaurant,coffee,club,nightlife", label: "Dining & Nightlife" },
             ]}
-            searchPlaceholder="Lalibela, Omo Valley, city tours..."
+            searchPlaceholder="Tours, restaurants, coffee..."
             accentColor="orange-500"
         />
     );

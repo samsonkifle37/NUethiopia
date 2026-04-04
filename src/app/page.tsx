@@ -936,7 +936,7 @@ function ThisWeekInAddis() {
       <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 px-1">
         {[
           { emoji: "☕", title: "Coffee Ceremony 101", desc: "Experience Ethiopia's most sacred daily ritual.", link: "/coffee-passport", color: "from-amber-500 to-orange-600" },
-          { emoji: "🎵", title: "Live Jazz Nights", desc: "Find the best Ethiopian jazz clubs in Bole.", link: "/dining", color: "from-purple-500 to-indigo-600" },
+          { emoji: "🎵", title: "Live Jazz Nights", desc: "Find the best Ethiopian jazz clubs in Bole.", link: "/tours", color: "from-purple-500 to-indigo-600" },
           { emoji: "🏛️", title: "Heritage Walk", desc: "Piazza's colonial architecture & hidden cafés.", link: "/tours", color: "from-emerald-500 to-teal-600" },
           { emoji: "🌄", title: "Entoto Escapes", desc: "Eucalyptus forests 20 min from the city center.", link: "/tours", color: "from-sky-500 to-blue-600" },
         ].map((pick: any, i: number) => (

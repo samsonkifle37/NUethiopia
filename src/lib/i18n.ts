@@ -6,7 +6,7 @@ export const translations = {
     },
     home: {
       tagline: "Come Discover Ethiopia",
-      hero: "Your AI travel companion",
+      hero: "Plan your Ethiopia trip in seconds",
       placeholder: "e.g., 3 days in Addis, history and coffee...",
       pickup: "Pickup", stays: "Stays", tours: "Tours",
       transport: "Transport", dining: "Dining",

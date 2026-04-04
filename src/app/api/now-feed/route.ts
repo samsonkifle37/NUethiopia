@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Scoring & Logic
+        const timeOfDay = getTimeOfDay(nowServer);
         const scoredPlaces = places.map((place: any) => {
             let score = 0;
             
@@ -36,27 +37,32 @@ export async function GET(request: NextRequest) {
                           (!place.eventEndTime || place.eventEndTime >= nowServer);
             if (isLive) score += 40;
             
-            // 3. Distance Score (*20)
+            // 3. Distance Score (*30) - Increased weight for personal feel
             let distanceScore = 0;
             if (place.latitude && place.longitude) {
                 const dist = calculateDistance(lat, lng, place.latitude, place.longitude);
-                // 1km or less = full 20 points, drops off linearly or exponentially
-                distanceScore = Math.max(0, 20 * (1 / (1 + dist))); 
+                // Closer is much better
+                distanceScore = Math.max(0, 30 * (1 / (1 + dist))); 
             }
             score += distanceScore;
             
-            // 4. Verification Score (*10)
+            // 4. Time of Day Affinity (+20) - NEW for personalization
+            if (timeOfDay === "Morning" && (place.type === "coffee" || place.type === "park" || place.type === "museum")) score += 20;
+            if (timeOfDay === "Afternoon" && (place.type === "restaurant" || place.type === "market" || place.type === "tour")) score += 20;
+            if (timeOfDay === "Evening" && (place.type === "restaurant" || place.type === "nightlife" || place.type === "club")) score += 20;
+            if (timeOfDay === "Night" && (place.type === "nightlife" || place.type === "club" || place.type === "bar")) score += 20;
+
+            // 5. Verification & Popularity
             score += (place.verificationScore / 100) * 10;
+            if (place._count?.reviews > 10) score += 5;
             
-            // 5. Availability Signal (+15)
-            const hasUrgency = place.availabilityStatus === "last_seats" || 
-                              place.availabilityStatus === "filling_up";
-            if (hasUrgency) score += 15;
+            // 6. Random Jitter (+0-15) - To make it change regularly
+            score += Math.random() * 15;
 
             // Micro-signals for UI
             let microSignal = "Open now";
             if (isLive) microSignal = "Live Event";
-            else if (hasUrgency) {
+            else if (place.availabilityStatus === "last_seats" || place.availabilityStatus === "filling_up") {
                 microSignal = place.availabilityStatus === "last_seats" ? "Last seats" : "Filling fast";
             } else if (!isOpen) microSignal = "Opens later";
 
@@ -71,42 +77,25 @@ export async function GET(request: NextRequest) {
         // Sorting
         scoredPlaces.sort((a, b) => b.score - a.score);
 
-        // Selection Rules
-        // Featured = highest scoring place OR live event
-        const featured = scoredPlaces[0];
+        // Selection with Randomness
+        // Featured = Pick from the top 3 highest scoring places (adds variety)
+        const featuredCandidates = scoredPlaces.slice(0, 3);
+        const featured = featuredCandidates[Math.floor(Math.random() * featuredCandidates.length)];
         
-        // Secondary = 2 places
-        // 1. One urgent (closing soon / limited availability)
-        // 2. One relaxed (coffee / chill)
-        const secondary: any[] = [];
+        // Secondary = 2 places from the next top 8
+        const secondaryCandidates = scoredPlaces
+            .filter(p => p.id !== featured?.id)
+            .slice(0, 8);
         
-        // Find an urgent one
-        const urgent = scoredPlaces.find(p => 
-            p.id !== featured?.id && 
-            (p.availabilityStatus === "last_seats" || p.availabilityStatus === "filling_up")
-        );
-        if (urgent) secondary.push(urgent);
-        
-        // Find a relaxed one
-        const relaxed = scoredPlaces.find(p => 
-            p.id !== featured?.id && 
-            !secondary.find(s => s.id === p.id) &&
-            (p.type === "coffee" || p.type === "park" || p.type === "museum" || p.type === "culture")
-        );
-        if (relaxed) secondary.push(relaxed);
-
-        // Fill remaining if needed
-        scoredPlaces.forEach(p => {
-            if (secondary.length < 2 && p.id !== featured?.id && !secondary.find(s => s.id === p.id)) {
-                secondary.push(p);
-            }
-        });
+        // Shuffle and pick 2
+        const shuffledSecondary = secondaryCandidates.sort(() => 0.5 - Math.random());
+        const secondary = shuffledSecondary.slice(0, 2);
 
         return NextResponse.json({
             featured,
-            secondary: secondary.slice(0, 2),
+            secondary,
             context: {
-                timeOfDay: getTimeOfDay(nowServer),
+                timeOfDay,
                 timestamp: nowServer.toISOString(),
                 location: "Addis Ababa"
             }
