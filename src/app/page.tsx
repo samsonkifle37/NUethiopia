@@ -276,11 +276,14 @@ function AirportUtilityCard() {
         <Link href="/sim" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
           <Wifi className="w-3.5 h-3.5 text-[#D4AF37]" /> Get a SIM
         </Link>
+        <Link href="/stays" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
+          <BedDouble className="w-3.5 h-3.5 text-[#D4AF37]" /> Find a Stay
+        </Link>
+        <Link href="/coffee-passport" className="bg-[#C9973B]/20 hover:bg-[#C9973B]/30 border border-[#C9973B]/30 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-[#E8C07A] transition">
+          {tr("home","coffeePassport")}
+        </Link>
         <Link href="/plan?q=First+day+in+Addis+Ababa" className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#1A1A2E] flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition shadow-lg shadow-[#D4AF37]/20">
           <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} /> Quick AI Plan
-        </Link>
-        <Link href="/coffee-passport" className="bg-[#C9973B]/20 hover:bg-[#C9973B]/30 border border-[#C9973B]/30 col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-[#E8C07A] transition">
-          {tr("home","coffeePassport")}
         </Link>
       </div>
     </div>
@@ -402,43 +405,10 @@ function WhatIsHappeningNow() {
         ))}
       </div>
 
-      {/* 4. Browse All Experience CTA */}
-      <div className="px-1 pt-2">
-        <Link 
-          href="/explore" 
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-5 rounded-[2rem] text-sm font-black text-[#1A1A2E] uppercase tracking-widest hover:border-[#D4AF37] hover:bg-gray-50 transition-all active:scale-[0.98] shadow-sm transform hover:scale-[0.99]"
-        >
-          Browse all experiences <ArrowRight className="w-4 h-4 text-[#D4AF37]" strokeWidth={3} />
-        </Link>
-      </div>
-
     </div>
   );
 }
 
-function FinalActionTiles() {
-  const actions = [
-    { name: "Find a Stay", href: "/stays", icon: BedDouble },
-    { name: "Plan a Trip", href: "/plan", icon: Sparkles },
-  ];
-
-  return (
-    <div className="flex gap-4 px-3 mt-10">
-      {actions.map((tile) => (
-        <Link 
-          key={tile.name} 
-          href={tile.href} 
-          className="flex-1 flex flex-col items-center gap-3 p-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-md hover:border-[#D4AF37] hover:shadow-xl transition-all active:scale-95 group"
-        >
-          <div className="w-14 h-14 bg-[#1A1A2E]/5 text-[#1A1A2E] rounded-2xl flex items-center justify-center group-hover:bg-[#1A1A2E] group-hover:text-[#D4AF37] transition-all">
-            <tile.icon className="w-6 h-6" strokeWidth={1.5} />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-center text-[#1A1A2E]">{tile.name}</span>
-        </Link>
-      ))}
-    </div>
-  );
-}
 
 
 
@@ -1002,9 +972,6 @@ export default function HomePage() {
       <FeaturedStays />
 
       <TopExperiences />
-
-      {/* 5. Final Action Hooks (Stay & Plan) */}
-      <FinalActionTiles />
 
       {/* Footer Recommendations */}
       <AiRecommendations />
