@@ -1,23 +1,23 @@
-import { PlaceGrid } from "@/components/PlaceGrid";
+"use client";
 
-export const metadata = {
-    title: "Stays — NU",
-    description: "Find hotels, guesthouses, apartments, and resorts across Ethiopia.",
-};
+import { PlaceGrid } from "@/components/PlaceGrid";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function StaysPage() {
+    const { tr } = useLanguage();
+
     return (
         <PlaceGrid
-            title="Discover Stays"
+            title={tr("sections", "discoverStays")}
             types="hotel,guesthouse,apartment,resort"
             filterOptions={[
-                { value: "", label: "All Stays" },
-                { value: "hotel", label: "Hotels" },
-                { value: "guesthouse", label: "Guesthouses" },
-                { value: "apartment", label: "Apartments" },
-                { value: "resort", label: "Resorts" },
+                { value: "", label: tr("sections", "allStays") },
+                { value: "hotel", label: tr("sections", "hotels") },
+                { value: "guesthouse", label: tr("sections", "guesthouses") },
+                { value: "apartment", label: tr("sections", "apartments") },
+                { value: "resort", label: tr("sections", "resorts") },
             ]}
-            searchPlaceholder="Bole, hotels, apartments..."
+            searchPlaceholder={tr("sections", "staysSearch")}
             accentColor="ethiopia-green"
         />
     );

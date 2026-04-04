@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { PlaceCard } from "./PlaceCard";
 import { Search, Filter } from "lucide-react";
 import { getPrimaryVerifiedImage } from "@/lib/images";
@@ -61,6 +62,7 @@ export function PlaceGrid({
     accentColor = "ethiopia-green",
     areaOptions,
 }: PlaceGridProps) {
+    const { tr } = useLanguage();
     const [activeFilter, setActiveFilter] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [areaFilter, setAreaFilter] = useState("");
@@ -142,7 +144,7 @@ export function PlaceGrid({
                             onClick={() => setAreaFilter("")}
                             className={`px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${!areaFilter ? "bg-[#C9973B] text-white border-[#C9973B] shadow-sm" : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}
                         >
-                            📍 All Areas
+                            {tr("grid", "allAreas")}
                         </button>
                         {areaOptions.map(opt => (
                             <button
@@ -171,10 +173,10 @@ export function PlaceGrid({
                     <div className="text-center py-16 bg-white rounded-[2rem] border border-dashed border-gray-200">
                         <div className="text-4xl mb-4">⚠️</div>
                         <h3 className="text-lg font-bold text-gray-900">
-                            Something went wrong
+                            {tr("grid", "error")}
                         </h3>
                         <p className="text-gray-400 text-sm mt-1">
-                            Please try again later
+                            {tr("grid", "errorSub")}
                         </p>
                     </div>
                 ) : allPlaces.length === 0 ? (
@@ -183,22 +185,22 @@ export function PlaceGrid({
                             <Search className="w-8 h-8 text-[#C9973B]" />
                         </div>
                         <h3 className="text-lg font-black text-[#1A1612]">
-                            No places found
+                            {tr("grid", "noResults")}
                         </h3>
                         <p className="text-gray-500 text-sm mt-1 max-w-[200px] mx-auto leading-relaxed">
-                            Try adjusting your filters or search term to discover more.
+                            {tr("grid", "noResultsSub")}
                         </p>
                         <button 
                             onClick={() => { setSearchQuery(""); setActiveFilter(""); }}
                             className="mt-6 text-[10px] font-black uppercase tracking-widest bg-[#1A1612] text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition"
                         >
-                            Clear Filters
+                            {tr("grid", "clearFilters")}
                         </button>
                     </div>
                 ) : (
                     <>
                         <div className="flex justify-between items-center mb-2 px-1">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{totalCount} {title} found</span>
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{totalCount} {tr("grid", "found")}</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {allPlaces.map((place) => (
@@ -235,10 +237,10 @@ export function PlaceGrid({
                                 {isFetchingNextPage ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
-                                        Fetching...
+                                        {tr("grid", "fetching")}
                                     </>
                                 ) : (
-                                    "Load More"
+                                    tr("grid", "loadMore")
                                 )}
                             </button>
                         </div>
@@ -246,7 +248,7 @@ export function PlaceGrid({
                     {!hasNextPage && allPlaces.length > 0 && (
                         <div className="text-center py-10">
                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                You've reached the end
+                                {tr("grid", "end")}
                             </p>
                         </div>
                     )}

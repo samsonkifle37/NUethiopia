@@ -1,21 +1,21 @@
-import { PlaceGrid } from "@/components/PlaceGrid";
+"use client";
 
-export const metadata = {
-    title: "Tours & Experiences — NU",
-    description: "Discover guided tours, museums, parks, markets, and cultural experiences across Ethiopia.",
-};
+import { PlaceGrid } from "@/components/PlaceGrid";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ToursPage() {
+    const { tr } = useLanguage();
+
     return (
         <PlaceGrid
-            title="Tours & Dining"
+            title={tr("sections", "toursDining")}
             types="tour,tour_operator,guide,experience,restaurant,coffee,club,nightlife"
             filterOptions={[
-                { value: "", label: "All" },
-                { value: "tour,tour_operator,guide,experience", label: "Tours" },
-                { value: "restaurant,coffee,club,nightlife", label: "Dining & Nightlife" },
+                { value: "", label: tr("grid", "allAreas") },
+                { value: "tour,tour_operator,guide,experience", label: tr("nav", "tours") },
+                { value: "restaurant,coffee,club,nightlife", label: tr("sections", "diningNightlife") },
             ]}
-            searchPlaceholder="Tours, restaurants, coffee..."
+            searchPlaceholder={tr("sections", "toursSearch")}
             accentColor="orange-500"
         />
     );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translations } from "@/lib/i18n";
 
 
 
@@ -104,22 +105,11 @@ async function fetchPlaces(types: string, limit: number, search?: string) {
 
 
 function HeroSection() {
-  const { tr } = useLanguage();
-
+  const { tr, language } = useLanguage();
   const [prompt, setPrompt] = useState("");
 
-
-  const suggestions = [
-
-    "3 days in Addis with coffee tours",
-
-    "Hidden restaurants in Addis",
-
-    "Must-see places in Addis Ababa",
-
-    "Ethiopia historical route"
-
-  ];
+  const rawHome = (translations[language] as any)?.home || translations.en.home;
+  const suggestions = rawHome.suggestions || translations.en.home.suggestions;
 
 
 
@@ -219,7 +209,7 @@ function HeroSection() {
 
         <div className="flex flex-wrap items-center justify-center gap-2 mt-4 max-w-lg">
 
-            {suggestions.map((sug) => (
+            {suggestions.map((sug: string) => (
 
                 <Link
 
@@ -261,29 +251,29 @@ function AirportUtilityCard() {
           <Plane className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-[#D4AF37] font-black text-sm uppercase tracking-widest uppercase">Just landed at Bole?</h3>
-          <p className="text-xs text-gray-400 font-medium mt-0.5">Your first-hour essentials.</p>
+          <h3 className="text-[#D4AF37] font-black text-sm uppercase tracking-widest">{tr("home", "landingTitle")}</h3>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">{tr("home", "landingSub")}</p>
         </div>
       </div>
       
       <div className="grid grid-cols-2 gap-3 relative z-10">
         <Link href="/transport" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
-          <Car className="w-3.5 h-3.5 text-[#D4AF37]" /> Airport Pickup
+          <Car className="w-3.5 h-3.5 text-[#D4AF37]" /> {tr("home", "pickup")}
         </Link>
         <Link href="/currency" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
-          <Banknote className="w-3.5 h-3.5 text-[#D4AF37]" /> Exchange Money
+          <Banknote className="w-3.5 h-3.5 text-[#D4AF37]" /> {tr("home", "exchange")}
         </Link>
         <Link href="/sim" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
-          <Wifi className="w-3.5 h-3.5 text-[#D4AF37]" /> Get a SIM
+          <Wifi className="w-3.5 h-3.5 text-[#D4AF37]" /> {tr("home", "sim")}
         </Link>
         <Link href="/stays" className="bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-white transition">
-          <BedDouble className="w-3.5 h-3.5 text-[#D4AF37]" /> Find a Stay
+          <BedDouble className="w-3.5 h-3.5 text-[#D4AF37]" /> {tr("home", "stays")}
         </Link>
         <Link href="/coffee-passport" className="bg-[#C9973B]/20 hover:bg-[#C9973B]/30 border border-[#C9973B]/30 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase text-[#E8C07A] transition">
           {tr("home","coffeePassport")}
         </Link>
         <Link href="/plan?q=First+day+in+Addis+Ababa" className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#1A1A2E] flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition shadow-lg shadow-[#D4AF37]/20">
-          <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} /> Quick AI Plan
+          <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} /> {tr("home", "aiPlan")}
         </Link>
       </div>
     </div>
@@ -291,7 +281,7 @@ function AirportUtilityCard() {
 }
 
 function WhatIsHappeningNow() {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
 
   // Get user location for context-aware ranking
@@ -321,9 +311,9 @@ function WhatIsHappeningNow() {
   });
 
   const nowServer = data?.context?.timestamp ? new Date(data.context.timestamp) : new Date();
-  const day = nowServer.toLocaleDateString('en-US', { weekday: 'long' });
-  const time = nowServer.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const timeOfDay = data?.context?.timeOfDay || "Today";
+  const locale = language === 'am' ? 'am-ET' : 'en-US';
+  const day = nowServer.toLocaleDateString(locale, { weekday: 'long' });
+  const time = nowServer.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
 
   return (
     <div className="mt-8 px-2 space-y-6">
@@ -331,11 +321,11 @@ function WhatIsHappeningNow() {
       {/* A. Context Header */}
       <div className="flex flex-col gap-1 px-2 animate-in fade-in slide-in-from-left duration-700">
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] flex items-center gap-2">
-          What's happening now
+          {tr("home", "happeningNow")}
           <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
         </h2>
-        <p className="text-xl font-black text-[#1A1A2E] leading-tight">
-          {day} {time} in Addis — <span className="text-gray-400 font-medium italic">here's what's worth your time</span>
+        <p className="text-xl font-black text-[#1A1A2E] leading-tight flex flex-wrap gap-x-2">
+          <span>{day}</span> <span>{time}</span> <span>{tr("home", "inAddis")}</span> — <span className="text-gray-400 font-medium italic">{tr("home", "worthTime")}</span>
         </p>
       </div>
 
@@ -356,7 +346,7 @@ function WhatIsHappeningNow() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E] via-[#1A1A2E]/20 to-transparent z-10" />
             
             <div className="absolute top-5 left-5 bg-[#D4AF37] text-[#1A1A2E] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest z-20 shadow-lg animate-pulse">
-               {data.featured.hasLiveEvent ? "Live Event" : (data.featured.urgency || "Premium")}
+               {data.featured.hasLiveEvent ? tr("home", "liveEvent") : (data.featured.urgency || tr("home", "premium"))}
             </div>
 
             <div className="absolute bottom-6 left-6 right-6 z-20">
@@ -367,10 +357,10 @@ function WhatIsHappeningNow() {
                <h3 className="text-2xl font-black text-white leading-tight mb-2">{data.featured.name}</h3>
                <div className="flex items-center gap-3">
                   <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#D4AF37]" /> {data.featured.area || "Nearby"}
+                    <MapPin className="w-3 h-3 text-[#D4AF37]" /> {data.featured.area || tr("home", "nearby")}
                   </span>
                   <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1">
-                    <Navigation className="w-3 h-3 text-[#D4AF37]" /> {data.featured.distance || "1.2km away"}
+                    <Navigation className="w-3 h-3 text-[#D4AF37]" /> {data.featured.distance || `1.2km ${tr("home", "away")}`}
                   </span>
                </div>
             </div>
@@ -413,7 +403,7 @@ function WhatIsHappeningNow() {
 
 
 function FeaturedStays() {
-
+  const { tr } = useLanguage();
   const { data, isLoading } = useQuery({
 
     queryKey: ["home-stays"],
@@ -429,25 +419,15 @@ function FeaturedStays() {
     <div className="mt-10 space-y-4">
 
       <div className="flex justify-between items-center px-2">
-
         <h2 className="text-xl font-black tracking-tight text-[#1A1A2E]">
-
-          Featured Stays
-
+          {tr("home", "featuredStays")}
         </h2>
-
         <Link
-
           href="/stays"
-
           className="text-[#6B3E26] text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all"
-
         >
-
-          See All <ArrowRight className="w-3.5 h-3.5" />
-
+          {tr("home", "seeAll")} <ArrowRight className="w-3.5 h-3.5" />
         </Link>
-
       </div>
 
 
@@ -579,7 +559,7 @@ function FeaturedStays() {
 
 
 function TopExperiences() {
-
+    const { tr } = useLanguage();
     const { data: expData, isLoading } = useQuery({
 
       queryKey: ["home-experiences"],
@@ -615,25 +595,15 @@ function TopExperiences() {
       <div className="mt-10 space-y-4">
 
         <div className="flex justify-between items-center px-2">
-
           <h2 className="text-xl font-black tracking-tight text-[#1A1A2E]">
-
-            Top Experiences in Addis
-
+            {tr("home", "topExp")} {tr("home", "inAddis")}
           </h2>
-
           <Link
-
             href="/tours"
-
             className="text-[#6B3E26] text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all"
-
           >
-
-            See All <ArrowRight className="w-3.5 h-3.5" />
-
+            {tr("home", "seeAll")} <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-
         </div>
 
   
@@ -727,7 +697,7 @@ function TopExperiences() {
 
 
 function AiRecommendations() {
-
+    const { tr } = useLanguage();
     const plans = [
 
         { title: "The Ultimate Addis Weekender", desc: "A perfectly paced 2-day dive into the city's heart.", img: "https://hrbxtdzpseitkegkeknt.supabase.co/storage/v1/object/public/place-images/tours/ec3e82bf-4bbf-4346-8dc7-4dcc891e9441/AU_ZVEFWiaOvaASr0j6FS-D6lRW30QhA8RM53TILOjSzrBeaEcCFP0v77ZfPmRdx-x04a8h_5_rMhsiDbs-DdmEItKljkKiTXXAdyOBwTHW4PLjTrxemGOn6ul2PY6-xcNiBsSCXF1DE2a5a7Q-zGDvFctOzAJNmzmZ7u4Q2IXpdnBctbAZMqKJtUoCrv9y39Kt4vBaDLk8x2huYC4uGpHd-mv8znSJKRKnkUJyyx2RHCRaOeTRn9Z1QV5cfFNbQp_V0186b5BjGdyvz8wi6CpXpk9LQocskTkyNGWeQZFQOT6YxMfQywza2b1wIlt2iPszdkkPGASQqx2Y-rFmqUYYsEaq9EQYcWJ0Qhc4rn78SdSzDM1f9Mc90q10-uJ4vIFYt7KMV4Xnr8M-beHZbMo1etAPHnrRLs01AKP6HsDdF_rkYLlCZ.jpg" },
@@ -745,15 +715,10 @@ function AiRecommendations() {
         <div className="mt-10 mb-6 bg-gradient-to-br from-[#1A1A2E] to-[#6B3E26] -mx-4 px-4 py-10 sm:mx-0 sm:rounded-[3rem]">
 
             <div className="flex items-center gap-2 mb-6 px-2">
-
                 <Sparkles className="w-6 h-6 text-[#D4AF37]" />
-
                 <h2 className="text-2xl font-black tracking-tight text-white">
-
-                    Recommended for you
-
+                    {tr("home", "recForYou")}
                 </h2>
-
             </div>
 
 
