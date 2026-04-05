@@ -1,18 +1,71 @@
 
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import Image from "next/image";
-import { CheckCircle, XCircle, ImageIcon, Search } from "lucide-react";
+import { CheckCircle, XCircle, ImageIcon, Search, RefreshCw, Send, Loader2 } from "lucide-react";
 
 export default function DebugImagesPage() {
     const [filter, setFilter] = useState("");
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
+    const queryClient = useQueryClient();
 
     const { data, isLoading } = useQuery({
         queryKey: ["admin-content-dashboard"],
         queryFn: () => fetch("/api/admin/content-dashboard").then(r => r.json()),
     });
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        try {
+            const res = await fetch("/api/admin/images/sync", { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                queryClient.invalidateQueries({ queryKey: ["admin-content-dashboard"] });
+                alert("Synchronization complete: " + data.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Sync failed.");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+    const handlePublish = async () => {
+        if (!confirm("Are you sure you want to approve all pending images and publish to Vercel?")) return;
+        setIsPublishing(true);
+        try {
+            const res = await fetch("/api/admin/images/publish", { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                queryClient.invalidateQueries({ queryKey: ["admin-content-dashboard"] });
+                alert("Published! " + data.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Publishing failed.");
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
+    const handleApproveEntity = async (id: string) => {
+        try {
+            const res = await fetch("/api/admin/images/approve-entity", {
+                method: "POST",
+                body: JSON.stringify({ id }),
+                headers: { "Content-Type": "application/json" }
+            });
+            if (res.ok) {
+                queryClient.invalidateQueries({ queryKey: ["admin-content-dashboard"] });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const entities = data?.entities?.filter((e: any) =>
         e.name.toLowerCase().includes(filter.toLowerCase())
@@ -28,6 +81,25 @@ export default function DebugImagesPage() {
                     </div>
                     <h1 className="text-4xl font-black text-[#1A1612] tracking-tighter uppercase whitespace-nowrap">Image Debug Hub</h1>
                     <p className="text-gray-400 font-medium text-sm">Real-time audit of all platform assets.</p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 shadow-sm rounded-2xl text-xs font-black uppercase tracking-widest text-[#1A1612] hover:bg-gray-50 transition-all disabled:opacity-50"
+                    >
+                        {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        Synchronize
+                    </button>
+                    <button
+                        onClick={handlePublish}
+                        disabled={isPublishing}
+                        className="flex items-center gap-2 px-6 py-3 bg-[#1A1612] text-white shadow-xl shadow-gray-200/50 rounded-2xl text-xs font-black uppercase tracking-widest border border-[#1A1612] hover:bg-black transition-all disabled:opacity-50"
+                    >
+                        {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        Publish to Vercel
+                    </button>
                 </div>
             </div>
 
@@ -71,7 +143,18 @@ export default function DebugImagesPage() {
                             </div>
 
                             <div className="flex-1 space-y-2">
-                                <h3 className="font-bold text-gray-900 leading-tight">{entity.name}</h3>
+                                <div className="flex justify-between items-start">
+                                    <h3 className="font-bold text-gray-900 leading-tight">{entity.name}</h3>
+                                    {entity.score < 100 && (
+                                        <button
+                                            onClick={() => handleApproveEntity(entity.id)}
+                                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                                            title="Quick Approve All Pending"
+                                        >
+                                            <CheckCircle className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="flex flex-wrap gap-2">
                                     <Badge label={entity.type} color="bg-gray-100 text-gray-500" />
                                     <StatusBadge label="Primary" active={entity.primaryImage} />
