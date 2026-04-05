@@ -31,6 +31,8 @@ import {
 
 
     ShieldAlert,
+    Shield,
+    FileText,
     CheckCircle,
     User,
     Heart,
@@ -274,6 +276,163 @@ function AuthModal({ onClose }: { onClose: () => void }) {
                         </>
                     )}
                 </p>
+            </div>
+        </div>
+    );
+}
+
+
+// ── Delete Account Modal ──────────────────────────────
+
+function DeleteAccountModal({ onClose }: { onClose: () => void }) {
+    const { logout } = useAuth();
+    const [password, setPassword] = useState("");
+    const [confirmPhrase, setConfirmPhrase] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+
+    const handleDelete = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (confirmPhrase !== "DELETE") {
+            setError("Please type DELETE to confirm");
+            return;
+        }
+
+        setError("");
+        setLoading(true);
+
+        try {
+            const res = await fetch("/api/user/account/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password, confirmPhrase }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to delete account");
+            }
+
+            setSuccess(true);
+            setTimeout(() => {
+                // Force logout and redirect to home
+                window.location.href = "/";
+            }, 3000);
+        } catch (err: any) {
+            setError(err.message);
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
+
+            <div className="relative bg-white rounded-3xl w-full max-w-md p-6 pt-8 animate-in slide-in-from-bottom duration-300 shadow-2xl overflow-hidden">
+                {/* Visual Accent */}
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-red-500" />
+                
+                {/* Close */}
+                <button
+                    onClick={onClose}
+                    disabled={loading || success}
+                    className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-30"
+                >
+                    <X className="w-4 h-4 text-gray-500" />
+                </button>
+
+                {success ? (
+                    <div className="text-center py-8">
+                        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Check className="w-10 h-10 text-green-500" />
+                        </div>
+                        <h2 className="text-2xl font-black text-gray-900 mb-3">Account Deleted</h2>
+                        <p className="text-gray-500 text-sm font-medium px-4">
+                            Your account and all associated data have been permanently removed. Redirecting you home...
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="w-8 h-8 text-red-500" />
+                            </div>
+                            <h2 className="text-xl font-black text-gray-900 leading-tight">Delete your account?</h2>
+                            <p className="text-gray-500 text-xs mt-2 font-medium px-6">
+                                This action is <span className="text-red-600 font-bold uppercase">permanent</span> and cannot be undone. All your data will be wiped immediately.
+                            </p>
+                        </div>
+
+                        <div className="bg-red-50 rounded-2xl p-4 mb-6 border border-red-100">
+                            <h4 className="text-[10px] uppercase font-black text-red-600 tracking-wider mb-2">What will be removed:</h4>
+                            <ul className="text-[11px] text-red-800 font-bold space-y-1.5">
+                                <li className="flex items-center gap-2">
+                                    <div className="w-1 h-1 bg-red-400 rounded-full" /> Personal profile & bio
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <div className="w-1 h-1 bg-red-400 rounded-full" /> Saved places & collections
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <div className="w-1 h-1 bg-red-400 rounded-full" /> Trip itineraries & plans
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <div className="w-1 h-1 bg-red-400 rounded-full" /> Support requests & reports
+                                </li>
+                            </ul>
+                        </div>
+
+                        <form onSubmit={handleDelete} className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Confirm Identity</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                                    <input
+                                        type="password"
+                                        placeholder="Enter your password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        disabled={loading}
+                                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 text-sm font-medium"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Type &quot;DELETE&quot; to confirm</label>
+                                <input
+                                    type="text"
+                                    placeholder="DELETE"
+                                    value={confirmPhrase}
+                                    onChange={(e) => setConfirmPhrase(e.target.value)}
+                                    required
+                                    disabled={loading}
+                                    className="w-full px-4 py-3.5 bg-gray-50 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 text-sm font-medium placeholder:text-gray-200"
+                                />
+                            </div>
+
+                            {error && (
+                                <p className="text-red-600 text-xs font-bold leading-relaxed bg-red-50 px-4 py-2.5 rounded-xl border border-red-100">
+                                    {error}
+                                </p>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={loading || confirmPhrase !== "DELETE" || !password}
+                                className="w-full bg-red-600 text-white py-4 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-700 transition-colors disabled:opacity-30 mt-2 shadow-lg shadow-red-200"
+                            >
+                                {loading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <><Trash2 className="w-4 h-4" /> Delete Account Permanently</>
+                                )}
+                            </button>
+                        </form>
+                    </>
+                )}
             </div>
         </div>
     );
@@ -1136,6 +1295,7 @@ export default function ProfilePage() {
 
 
     const [showAuth, setShowAuth] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
 
     const { language, setLanguage, tr } = useLanguage();
@@ -1143,7 +1303,7 @@ export default function ProfilePage() {
 
 
     const [activeSection, setActiveSection] = useState<
-        "saved" | "collections" | "itineraries" | "settings" | null
+        "saved" | "collections" | "itineraries" | "settings" | "legal" | null
     >(null);
 
 
@@ -1201,6 +1361,7 @@ export default function ProfilePage() {
 
 
             {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+            {showDeleteModal && <DeleteAccountModal onClose={() => setShowDeleteModal(false)} />}
 
 
 
@@ -1695,159 +1856,105 @@ export default function ProfilePage() {
                         <h3 className="text-sm font-bold text-gray-900">{tr("profile","settings")}</h3>
 
 
-
                         <p className="text-[10px] text-gray-400 font-medium">
-
-
-
                             {tr("profile","settingsDesc")}
-
-
-
                         </p>
-
-
-
                     </div>
-
-
-
                     <ArrowRight
-
-
-
                         className={`w-4 h-4 text-gray-300 transition-transform ${activeSection === "settings" ? "rotate-90" : ""
-
-
-
                             }`}
-
-
-
                     />
-
-
-
                 </button>
 
-
-
-
-
-
-
                 {activeSection === "settings" && (
-
-
-
                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 space-y-4">
-
-
-
                         <button
-
-
                             className="flex justify-between items-center w-full"
-
-
                             onClick={() => {
-
-
                                 const next = language === "en" ? "am" : "en";
-
-
                                 setLanguage(next);
-
-
                             }}
-
-
                         >
-
-
                             <span className="text-sm font-medium text-gray-700">{tr("profile","language")}</span>
-
-
                             <span className="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-lg flex items-center gap-1">
-
-
                                 {language === "en" ? "English" : "አማርኛ"}
-
-
                                 <span className="text-[9px] text-gray-400 ml-1">⇅</span>
-
-
                             </span>
-
-
                         </button>
 
-
-
                         <div className="flex justify-between items-center">
-
-
-
                             <span className="text-sm font-medium text-gray-700">
-
-
-
                                 {tr("profile","notifications")}
-
-
-
                             </span>
-
-
-
                             <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-lg">
-
-
-
                                 On
-
-
-
                             </span>
-
-
-
                         </div>
-
-
 
                         <div className="flex justify-between items-center">
-
-
-
                             <span className="text-sm font-medium text-gray-700">{tr("profile","version")}</span>
-
-
-
                             <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-lg">
-
-
-
                                 V2.0
-
-
-
                             </span>
-
-
-
                         </div>
-
-
-
                     </div>
-
-
-
                 )}
 
+                {/* Legal & Privacy */}
+                <button
+                    onClick={() =>
+                        setActiveSection(activeSection === "legal" ? null : "legal")
+                    }
+                    className={`w-full flex items-center gap-4 rounded-2xl p-4 shadow-sm border transition-all ${activeSection === "legal"
+                            ? "bg-slate-50 border-slate-200"
+                            : "bg-white border-gray-50"
+                        }`}
+                >
+                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-slate-500" />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <h3 className="text-sm font-bold text-gray-900">Legal & Privacy</h3>
+                        <p className="text-[10px] text-gray-400 font-medium">Privacy policy, terms of service and legal info</p>
+                    </div>
+                    <ArrowRight
+                        className={`w-4 h-4 text-gray-300 transition-transform ${activeSection === "legal" ? "rotate-90" : ""}`}
+                    />
+                </button>
 
+                {activeSection === "legal" && (
+                    <div className="px-1 pb-2">
+                        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-50 space-y-3">
+                            <Link
+                                href="/legal/privacy"
+                                className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <FileText className="w-4 h-4 text-slate-600" />
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-900">Privacy Policy</p>
+                                        <p className="text-[9px] text-gray-400 font-medium">How we handle your data</p>
+                                    </div>
+                                </div>
+                                <ArrowRight className="w-3.5 h-3.5 text-gray-300" />
+                            </Link>
 
+                            <Link
+                                href="/legal/terms"
+                                className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <FileText className="w-4 h-4 text-slate-600" />
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-900">Terms of Service</p>
+                                        <p className="text-[9px] text-gray-400 font-medium">Rules for using our platform</p>
+                                    </div>
+                                </div>
+                                <ArrowRight className="w-3.5 h-3.5 text-gray-300" />
+                            </Link>
+                        </div>
+                    </div>
+                )}
             </div>
 
 
@@ -1898,7 +2005,31 @@ export default function ProfilePage() {
             </Link>
 
 
-
+            {/* Danger Zone */}
+            {user && (
+                <div className="pt-4">
+                    <div className="flex items-center gap-2 mb-3 px-1">
+                        <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Danger Zone</h4>
+                    </div>
+                    
+                    <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="w-full flex items-center gap-4 rounded-2xl p-4 bg-white border border-red-100 shadow-sm hover:border-red-200 transition-all group"
+                    >
+                        <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                            <Trash2 className="w-5 h-5 text-red-500" />
+                        </div>
+                        <div className="flex-1 text-left">
+                            <h3 className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors">Delete Account</h3>
+                            <p className="text-[10px] text-gray-400 font-medium leading-tight">
+                                Permanently remove your account and all your personal data.
+                            </p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-red-200 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+                </div>
+            )}
 
 
             {/* Footer */}

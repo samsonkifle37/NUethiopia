@@ -34,6 +34,11 @@ model User {
   visits              PlaceVisit[]
   favoriteCollections FavoriteCollection[]
   itineraries         Itinerary[]
+  
+  // Support & Legal
+  supportRequests     SupportRequest[]
+  generalReports      ReportGeneral[]
+  placeReports        ReportPlace[]
 }
 
 model VerificationToken {
@@ -279,6 +284,7 @@ model Place {
 
   placeSources     PlaceSource[]
   verificationLogs VerificationLog[]
+  reports          ReportPlace[] @relation("PlaceReports")
 }
 
 model PlaceSource {
@@ -645,4 +651,54 @@ model ItineraryShare {
 
   @@index([shareToken])
   @@index([itineraryId])
+}
+
+// ── Support & Legal ────────────────────────────
+
+model SupportRequest {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  category  String   // bug, payment, listing, account, other
+  message   String
+  status    String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ReportGeneral {
+  id            String   @id @default(uuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issueType     String   // bug, security, content, payment, other
+  description   String
+  screenshotUrl String?
+  status        String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, CLOSED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ReportPlace {
+  id            String   @id @default(uuid())
+  placeId       String
+  place         Place    @relation("PlaceReports", fields: [placeId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issueType     String   // incorrect_info, wrong_location, closed, offensive, other
+  description   String
+  screenshotUrl String?
+  status        String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, CLOSED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([placeId])
+  @@index([userId])
+  @@index([status])
 }
