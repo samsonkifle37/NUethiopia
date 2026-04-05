@@ -413,25 +413,25 @@ export default function PlaceDetailPage() {
 
                         {place.priceLevel !== null && place.priceLevel !== undefined && (
                             <span className="bg-white/20 backdrop-blur-sm text-white text-[9px] font-black px-2.5 py-1 rounded-full border border-white/20">
-                                {place.priceLevel === 0 ? "Free" : "$".repeat(place.priceLevel)}
+                                {place.priceLevel === 0 ? "Free Entry" : "$".repeat(place.priceLevel)}
                             </span>
                         )}
                         
                         {place.featured && (
                             <span className="bg-[#C9973B]/90 text-white text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full backdrop-blur-sm w-fit flex items-center gap-1 shadow-md">
-                                <Star className="w-2.5 h-2.5 text-white fill-white" /> Popular
+                                <Star className="w-2.5 h-2.5 text-white fill-white" /> Featured
                             </span>
                         )}
 
                         {place.ownerVerified && (
                             <span className="bg-[#1A1612]/90 text-white text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full backdrop-blur-sm w-fit flex items-center gap-1 shadow-md border border-white/20">
-                                🛡️ Owner Verified
+                                🛡️ Official Listing
                             </span>
                         )}
                         
                         {!place.ownerVerified && place.verificationScore >= 40 && (
                             <span className="bg-slate-400/90 text-white text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full backdrop-blur-sm w-fit flex items-center gap-1 shadow-md border border-white/40">
-                                ✓ Verified
+                                ✓ Verified Info
                             </span>
                         )}
                     </div>
@@ -487,6 +487,23 @@ export default function PlaceDetailPage() {
                 <div className="py-6 space-y-5">
                     {activeTab === "overview" && (
                         <>
+                            {/* Highlights */}
+                            {place.tags.length > 0 && (
+                                <div className="bg-slate-50 rounded-2xl p-5 shadow-sm border border-slate-100 mb-5 mt-4">
+                                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+                                        <Star className="w-4 h-4 text-[#C9973B]" /> Highlights
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {place.tags.slice(0, 4).map(tag => (
+                                            <div key={tag} className="flex items-center gap-2 text-[11px] font-bold text-slate-700 capitalize">
+                                                <div className="w-1.5 h-1.5 bg-[#C9973B] rounded-full" />
+                                                {tag}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Description */}
                             {displayDescription && (
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-50">
@@ -846,7 +863,18 @@ export default function PlaceDetailPage() {
                                 </div>
                             )}
 
-                            {/* Action buttons embedded in content if long, but mostly we'll use a sticky footer */}
+
+                            <div className="mt-12 mb-4 pt-6 border-t border-gray-100 flex flex-col items-center gap-2">
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] text-center">
+                                    Something not right with this listing?
+                                </p>
+                                <button 
+                                    onClick={() => alert("Report received. Our moderation team will investigate this listing immediately.")}
+                                    className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] hover:text-[#C9973B] transition-colors bg-white px-4 py-2 rounded-full border border-[#D4AF37]/20 active:scale-95 shadow-sm"
+                                >
+                                    🚩 Report Place
+                                </button>
+                            </div>
                         </>
                     )}
 

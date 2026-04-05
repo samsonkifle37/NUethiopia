@@ -1952,6 +1952,22 @@ export default function ProfilePage() {
                                 </div>
                                 <ArrowRight className="w-3.5 h-3.5 text-gray-300" />
                             </Link>
+
+                            <button
+                                onClick={() => {
+                                    window.location.href = "mailto:nuethiopia2026@gmail.com?subject=NU%20Support%20Request";
+                                }}
+                                className="flex items-center justify-between w-full p-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Mail className="w-4 h-4 text-blue-600" />
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-900">Contact Support</p>
+                                        <p className="text-[9px] text-gray-400 font-medium">Need help? Get in touch</p>
+                                    </div>
+                                </div>
+                                <ArrowRight className="w-3.5 h-3.5 text-blue-300" />
+                            </button>
                         </div>
                     </div>
                 )}
