@@ -83,22 +83,23 @@ export default function DebugImagesPage() {
                     <p className="text-gray-400 font-medium text-sm">Real-time audit of all platform assets.</p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    {/* Kept bulk sync for system-wide refresh, but smaller */}
                     <button
                         onClick={handleSync}
                         disabled={isSyncing}
-                        className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 shadow-sm rounded-2xl text-xs font-black uppercase tracking-widest text-[#1A1612] hover:bg-gray-50 transition-all disabled:opacity-50"
+                        className="p-3 bg-white border border-gray-100 shadow-sm rounded-2xl text-gray-500 hover:text-black transition-all hover:bg-gray-50 disabled:opacity-50"
+                        title="Master Sync"
                     >
                         {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                        Synchronize
                     </button>
                     <button
                         onClick={handlePublish}
                         disabled={isPublishing}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#1A1612] text-white shadow-xl shadow-gray-200/50 rounded-2xl text-xs font-black uppercase tracking-widest border border-[#1A1612] hover:bg-black transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-3 bg-[#1A1612] text-white shadow-xl shadow-gray-200/50 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-[#1A1612] hover:bg-black transition-all disabled:opacity-50"
                     >
                         {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        Publish to Vercel
+                        Publish All
                     </button>
                 </div>
             </div>
@@ -127,7 +128,7 @@ export default function DebugImagesPage() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 pb-20">
                     {entities.map((entity: any) => (
-                        <div key={entity.id} className="bg-white rounded-3xl p-4 shadow-xl shadow-gray-200/40 border border-white flex flex-col gap-4">
+                        <div key={entity.id} className="bg-white rounded-3xl p-4 shadow-xl shadow-gray-200/40 border border-white flex flex-col gap-4 group/card">
                             <div className="relative h-40 w-full rounded-2xl overflow-hidden bg-gray-100 group">
                                 {entity.primaryImage ? (
                                     <ManagedImage
@@ -140,39 +141,55 @@ export default function DebugImagesPage() {
                                         <span className="text-[10px] uppercase font-bold tracking-widest mt-2">No Image</span>
                                     </div>
                                 )}
+                                {entity.score < 100 && (
+                                    <div className="absolute top-2 right-2 flex gap-1 animate-in slide-in-from-top-2 duration-500">
+                                        <div className="bg-orange-500 text-white text-[8px] font-black uppercase px-2 py-1 rounded-md shadow-lg">Pending Review</div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex-1 space-y-2">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-gray-900 leading-tight">{entity.name}</h3>
-                                    {entity.score < 100 && (
-                                        <button
-                                            onClick={() => handleApproveEntity(entity.id)}
-                                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
-                                            title="Quick Approve All Pending"
-                                        >
-                                            <CheckCircle className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="flex flex-wrap gap-2">
+                                <h3 className="font-bold text-gray-900 leading-tight truncate px-1">{entity.name}</h3>
+                                <div className="flex flex-wrap gap-2 px-1">
                                     <Badge label={entity.type} color="bg-gray-100 text-gray-500" />
                                     <StatusBadge label="Primary" active={entity.primaryImage} />
                                     <StatusBadge label="Gallery" active={entity.galleryCount > 0} count={entity.galleryCount} />
                                     <StatusBadge label="Maps" active={entity.mapsLink} />
                                     <StatusBadge label="Contact" active={entity.contact || entity.website} />
                                 </div>
-                                <div className="pt-2 flex justify-between items-center bg-gray-50 rounded-xl px-3 py-2">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-gray-400 uppercase font-bold">Score</span>
-                                        <span className={`text-lg font-black ${entity.score === 100 ? 'text-emerald-500' : entity.score >= 80 ? 'text-blue-500' : 'text-orange-500'}`}>{entity.score}%</span>
+                                
+                                <div className="mt-4 pt-2 border-t border-gray-50 flex flex-col gap-2">
+                                    <div className="flex justify-between items-center px-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-tighter">Content Score</span>
+                                            <span className={`text-lg font-black ${entity.score === 100 ? 'text-emerald-500' : entity.score >= 80 ? 'text-blue-500' : 'text-orange-500'}`}>{entity.score}%</span>
+                                        </div>
+                                        <button
+                                            className="text-[10px] font-black uppercase tracking-widest px-3 py-2 bg-gray-50 text-gray-400 hover:text-[#1A1612] hover:bg-white border border-gray-100 rounded-xl transition-all"
+                                            onClick={() => window.open(`/place/${entity.slug}`, '_blank')}
+                                        >
+                                            Visit Page
+                                        </button>
                                     </div>
-                                    <button
-                                        className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-                                        onClick={() => window.open(`/place/${entity.slug}`, '_blank')}
-                                    >
-                                        Visit Page
-                                    </button>
+                                    
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => handleSync()}
+                                            disabled={isSyncing}
+                                            className="flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-100 rounded-xl text-[9px] font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all"
+                                        >
+                                            <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                                            Sync
+                                        </button>
+                                        <button
+                                            onClick={() => handleApproveEntity(entity.id)}
+                                            disabled={entity.score === 100}
+                                            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${entity.score < 100 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600' : 'bg-gray-50 text-gray-300 pointer-events-none'}`}
+                                        >
+                                            {entity.score === 100 ? <CheckCircle className="w-3 h-3" /> : <Send className="w-3 h-3 text-white/50" />}
+                                            {entity.score === 100 ? 'Published' : 'Publish'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
