@@ -13,7 +13,7 @@ export default async function ToursPage() {
   const tr = (section: keyof typeof translations["en"], key: string) => translate(lang, section, key);
 
   const initialData = await getPlacesServer({
-    types: "tour,tour_operator,guide,experience,restaurant,coffee,club,nightlife",
+    types: "tour,tour_operator,guide,experience,restaurant,coffee,cafe,bar,club,nightlife,lounge,food",
     limit: 18
   });
 
@@ -21,11 +21,11 @@ export default async function ToursPage() {
     <div className="min-h-screen bg-[#FAFAF8] pb-24">
       <PlaceGrid
         title={tr("sections", "toursDining")}
-        types="tour,tour_operator,guide,experience,restaurant,coffee,club,nightlife"
+        types="tour,tour_operator,guide,experience,restaurant,coffee,cafe,bar,club,nightlife,lounge,food"
         filterOptions={[
           { value: "", label: tr("grid", "allAreas") },
           { value: "tour,tour_operator,guide,experience", label: tr("nav", "tours") },
-          { value: "restaurant,coffee,club,nightlife", label: tr("sections", "diningNightlife") },
+          { value: "restaurant,coffee,cafe,bar,club,nightlife,lounge,food", label: tr("sections", "diningNightlife") },
         ]}
         searchPlaceholder={tr("sections", "toursSearch")}
         accentColor="orange-500"

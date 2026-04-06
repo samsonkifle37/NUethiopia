@@ -71,11 +71,18 @@ export function PlaceGrid({
 
     const activeTypes = activeFilter || types;
 
+    // Only provide initialData if we are in the exact state the server rendered
+    const isInitialState = !activeFilter && !searchQuery && !areaFilter;
+    const initialQueryData = isInitialState && initialData 
+        ? { pages: [initialData], pageParams: [0] } 
+        : undefined;
+
     const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
         queryKey: ["places", activeTypes, searchQuery, areaFilter],
         queryFn: ({ pageParam }) => fetchPlaces(activeTypes, searchQuery, pageParam, areaFilter),
         initialPageParam: 0,
-        initialData: initialData ? { pages: [initialData], pageParams: [0] } : undefined,
+        initialData: initialQueryData,
+        staleTime: 5000, // 5 seconds of freshness
         getNextPageParam: (lastPage, allPages) => {
             const currentCount = allPages.reduce((acc, page) => acc + page.places.length, 0);
             if (currentCount < lastPage.total) {
@@ -127,7 +134,6 @@ export function PlaceGrid({
                             key={filter.value}
                             onClick={() => {
                                 setActiveFilter(filter.value);
-                                setSearchQuery("");
                             }}
                             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${activeFilter === filter.value
                                 ? "bg-[#1A1612] text-white shadow-md border-[#1A1612]"
