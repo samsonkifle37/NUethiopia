@@ -34,6 +34,30 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "assets.hyatt.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.agoda.net",
+      },
+      {
+        protocol: "https",
+        hostname: "*.trvl-media.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cf.bstatic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "webbox.imgix.net",
+      },
+      {
+        protocol: "https",
+        hostname: "bwplusaddisababa.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.marriott.com",
+      },
     ],
     localPatterns: [
       {

@@ -18,7 +18,8 @@ import {
   Star,
   FileText,
   RefreshCcw,
-  Radio
+  Radio,
+  ShieldAlert
 } from "lucide-react";
 
 const eventTypeConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -226,6 +227,19 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+
+          <Link href="/admin/safety" className="block bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group border-l-4 border-l-rose-500">
+            <div className="flex items-center gap-4">
+              <div className="p-4 rounded-2xl bg-rose-50 group-hover:bg-rose-500 transition-colors group-hover:rotate-6">
+                <ShieldAlert className="w-6 h-6 text-rose-500 group-hover:text-white transition-colors" opacity={1} />
+              </div>
+              <div>
+                <h4 className="font-black text-[#1A1612] text-sm uppercase tracking-tight">Travel Safety</h4>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Manage Region Status</p>
+              </div>
+              <ArrowUpRight className="ml-auto w-5 h-5 text-gray-300 group-hover:text-[#1A1612] transition-colors" />
+            </div>
+          </Link>
 
           <Link href="/admin/foundry" className="block bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group border-l-4 border-l-[#D4AF37]">
             <div className="flex items-center gap-4">

@@ -14,6 +14,7 @@ interface PlaceGridProps {
     searchPlaceholder?: string;
     accentColor?: string;
     areaOptions?: { value: string; label: string; emoji?: string }[];
+    initialData?: PlacesResponse;
 }
 
 interface PlaceData {
@@ -61,6 +62,7 @@ export function PlaceGrid({
     searchPlaceholder = "Search...",
     accentColor = "ethiopia-green",
     areaOptions,
+    initialData
 }: PlaceGridProps) {
     const { tr } = useLanguage();
     const [activeFilter, setActiveFilter] = useState("");
@@ -73,6 +75,7 @@ export function PlaceGrid({
         queryKey: ["places", activeTypes, searchQuery, areaFilter],
         queryFn: ({ pageParam }) => fetchPlaces(activeTypes, searchQuery, pageParam, areaFilter),
         initialPageParam: 0,
+        initialData: initialData ? { pages: [initialData], pageParams: [0] } : undefined,
         getNextPageParam: (lastPage, allPages) => {
             const currentCount = allPages.reduce((acc, page) => acc + page.places.length, 0);
             if (currentCount < lastPage.total) {

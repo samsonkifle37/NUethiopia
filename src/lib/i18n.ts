@@ -1,7 +1,7 @@
 export const translations = {
   en: {
     nav: {
-      home: "Home", stays: "Stays", tours: "Tours",
+      home: "Home", stays: "Stays", identify: "Identify", tours: "Tours",
       dining: "Dining", transport: "Transport", itineraries: "Plans", favorites: "Favorites", profile: "Profile",
     },
     common: {
@@ -203,6 +203,78 @@ export const translations = {
       s4title: "ቦሌ ደረሱ?", s4sub: "የመጀመሪያ ሰዓትዎ ዝግጁ ነው", s4body: "ፒክ አፕ፣ SIM ካርድ ምሪት፣ ምንዛሬ ልውውጥ — ሁሉም ለመጀመሪያ ሰዓትዎ።",
     },
   },
+  om: {
+    nav: {
+        home: "Mana", stays: "Bultii", tours: "Dawannaa",
+        dining: "Nyaata", transport: "Geejibaa", itineraries: "Karoora", favorites: "Jaallatamoo", profile: "Eenyummaa",
+    },
+    common: {
+        seeAll: "Hunda Laali",
+        openNow: "Banaadha",
+        nearby: "Dhiyoo",
+        away: "fageenya",
+    },
+    grid: {
+        allAreas: "📍 Bakka Hunda",
+        error: "Dogoggoratu uumame",
+        errorSub: "Maaloo yeroo booda yaali",
+        noResults: "Bakki hin argamne",
+        noResultsSub: "Qindeessituu kee sirreessuu yaali.",
+        clearFilters: "Haqi",
+        found: "argameera",
+        fetching: "Barbaadaa jira...",
+        loadMore: "Dabalata Laali",
+        end: "DHUUMA",
+    },
+    sections: {
+        discoverStays: "Bultii Barbaadi",
+        allStays: "Bultii Hunda",
+        hotels: "Hoteelota",
+        guesthouses: "Bultii Keessummaa",
+        apartments: "Aappaartimantii",
+        resorts: "Riizortota",
+        toursDining: "Dawannaa & Nyaata",
+        diningNightlife: "Nyaata & Jireenya Halkan",
+        staysSearch: "Boolee, hoteelota, aappaartimantii...",
+        toursSearch: "Dawannaa, nyaata, buna...",
+    }
+  },
+  ti: {
+    nav: {
+        home: "መበገሲ", stays: "መዕረፊ", tours: "ዑደት",
+        dining: "መግቢ", transport: "ትራንስፖርት", itineraries: "መደብ", favorites: "ዝተመርጹ", profile: "መገለጺ",
+    },
+    common: {
+        seeAll: "ኩሉ ርአ",
+        openNow: "ክፉት እዩ",
+        nearby: "ቀረባ",
+        away: "ርሕቀት",
+    },
+    grid: {
+        allAreas: "📍 ኩሎም ከባቢታት",
+        error: "ጸገም ተፈጢሩ",
+        errorSub: "በጃኹም ደሓር ደጊምኩም ፈትኑ",
+        noResults: "ቦታ ኣይተረኽበን",
+        noResultsSub: "ተወሰኽቲ ቦታታት ንምርካብ ምድላይኩም ኣመሓይሹ።",
+        clearFilters: "ኣጥፍእ",
+        found: "ተረኺቦም",
+        fetching: "ንዳለዎ...",
+        loadMore: "ተወሰኽቲ ርአ",
+        end: "መወዳእታ በጺሕኹም",
+    },
+    sections: {
+      discoverStays: "መዕረፊታት ድለዩ",
+      allStays: "ኩሎም መዕረፊታት",
+      hotels: "ሆተላት",
+      guesthouses: "መዕረፊ ኣጋይሽ",
+      apartments: "አፓርትመንት",
+      resorts: "ሪዞርት",
+      toursDining: "ዑደትን መግቢን",
+      diningNightlife: "መግቢን ምሸትን",
+      staysSearch: "ቦሌ፣ ሆተላት፣ አፓርትመንት...",
+      toursSearch: "ዑደት፣ መግቢ፣ ቡን...",
+    }
+  }
 } as const;
 
 export type Language = keyof typeof translations;

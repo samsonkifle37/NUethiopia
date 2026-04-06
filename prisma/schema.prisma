@@ -39,6 +39,9 @@ model User {
   supportRequests     SupportRequest[]
   generalReports      ReportGeneral[]
   placeReports        ReportPlace[]
+  
+  // Immersive Features
+  speciesObservations SpeciesObservation[]
 }
 
 model VerificationToken {
@@ -697,8 +700,59 @@ model ReportPlace {
   status        String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, CLOSED
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  @@index([placeId])
-  @@index([userId])
   @@index([status])
+}
+
+// ── Safety & Travel Status ────────────
+model TravelStatus {
+  id           String   @id @default(uuid())
+  region       String   @unique // e.g. "Addis Ababa", "Amhara", "Tigray", "Oromia", "Southern", "Afar"
+  status       String   // GREEN, YELLOW, RED
+  summary      String
+  details      String
+  sourceType   String   @default("admin") // official, admin, aggregated
+  lastUpdated  DateTime @default(now()) @updatedAt
+  
+  @@index([status])
+}
+
+// ── Wildlife & Flora ────────────
+model Species {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  scientificName  String?
+  type            String   // ANIMAL, PLANT, BIRD
+  description     String
+  habitat         String
+  culturalSignificance String?
+  funFact         String?
+  imageUrl        String
+  regionTags      String[] @default([])
+  
+  observations    SpeciesObservation[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([type])
+}
+
+model SpeciesObservation {
+  id              String   @id @default(uuid())
+  speciesId       String
+  userId          String
+  imageUrl        String
+  location        String?
+  latitude        Float?
+  longitude       Float?
+  confidenceScore Float?
+  notes           String?
+  
+  species         Species  @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+
+  @@index([speciesId])
+  @@index([userId])
 }
