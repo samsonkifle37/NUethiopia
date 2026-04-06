@@ -75,24 +75,24 @@ function HeroSection() {
         </h2>
 
         {/* Unified Search/Plan Input */}
-        <div className="w-full bg-white/5 backdrop-blur-2xl p-2 rounded-[2.5rem] border border-white/10 shadow-2xl group transition-all focus-within:border-[#C9973B]/50">
-          <div className="flex items-center gap-3 p-1">
-            <div className="w-12 h-12 bg-[#C9973B] rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-[#C9973B]/20">
-              <Sparkles className="w-6 h-6 text-[#1A1612]" />
+        <div className="w-full bg-white/5 backdrop-blur-2xl p-1.5 sm:p-2 rounded-[2.5rem] border border-white/10 shadow-2xl group transition-all focus-within:border-[#C9973B]/50">
+          <div className="flex items-center gap-2 sm:gap-3 p-1">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#C9973B] rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-[#C9973B]/20">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#1A1612]" />
             </div>
             <input 
               type="text" 
               placeholder={tr("home","placeholder")} 
-              className="flex-1 bg-transparent text-white text-base px-2 placeholder-white/20 focus:outline-none font-bold"
+              className="flex-1 min-w-0 bg-transparent text-white text-sm sm:text-base px-1 sm:px-2 placeholder-white/20 focus:outline-none font-bold"
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (window.location.href=`/plan?q=${encodeURIComponent(prompt)}`)}
             />
             <Link 
                 href={`/plan${prompt ? `?q=${encodeURIComponent(prompt)}` : ''}`} 
-                className="bg-white text-[#1A1612] px-6 py-4 rounded-2xl hover:bg-[#C9973B] transition-all shrink-0 text-[11px] font-black uppercase tracking-widest"
+                className="bg-white text-[#1A1612] px-4 sm:px-6 py-3 sm:py-4 rounded-2xl hover:bg-[#C9973B] transition-all shrink-0 text-[10px] sm:text-[11px] font-black uppercase tracking-widest flex items-center gap-1"
             >
-               Plan <ArrowRight className="w-4 h-4 inline ml-1" />
+               <span className="hidden xs:inline">Plan</span> <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -142,7 +142,7 @@ function TrustStrip() {
     );
 }
 
-function ArrivalEssentialsSection() {
+function JustLandedSection() {
     const essentials = [
         { label: "AIRPORT PICKUP", icon: Plane, href: "/transport#airport-pickup" },
         { label: "LOCAL SIM", icon: Wifi, href: "/sim" },
@@ -160,7 +160,7 @@ function ArrivalEssentialsSection() {
                     <div className="w-12 h-12 bg-[#C9973B] rounded-2xl flex items-center justify-center shadow-lg shadow-[#C9973B]/20">
                         <Plane className="w-6 h-6 text-[#1A1612]" />
                     </div>
-                    <h2 className="text-xl font-black text-white uppercase tracking-[0.2em] italic">Arrival Essentials</h2>
+                    <h2 className="text-xl font-black text-white uppercase tracking-[0.2em] italic">Just landed</h2>
                 </div>
 
                 {/* Action Buttons Grid */}
@@ -223,8 +223,8 @@ function WhatsHappeningSection() {
                         { title: "Art Expo 2024", loc: "National Museum", tag: "POPULAR", time: "Now", img: "https://images.unsplash.com/photo-1544413647-795175a95444?q=80&w=1974&auto=format&fit=crop" }
                     ].map((event) => (
                         <Link key={event.title} href="/tours" className="shrink-0 w-72 bg-[#1A1612] rounded-[3rem] overflow-hidden relative group shadow-2xl shadow-[#1A1612]/20">
-                            <div className="h-44 relative">
-                                <img src={event.img} className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" />
+                            <div className="aspect-[16/10] sm:h-44 relative">
+                                <img src={event.img} alt={event.title} className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612] via-transparent to-transparent" />
                                 <div className="absolute top-4 left-4 flex gap-2">
                                     <span className="bg-rose-600 text-white text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{event.tag}</span>
@@ -252,9 +252,13 @@ function WhatsHappeningSection() {
                         { title: "Traditional Coffee Ceremony", sub: "Authentic Heritage Experience", tag: "CULTURAL", icon: UtensilsCrossed, color: "bg-orange-50", tColor: "text-orange-500" },
                         { title: "Sunday Entoto Hikes", sub: "Best viewpoints in the city", tag: "WEEKEND", icon: Map, color: "bg-blue-50", tColor: "text-blue-500" }
                     ].map((pick) => (
-                        <div key={pick.title} className="bg-white p-5 rounded-[2.5rem] border border-gray-100 flex items-center justify-between group shadow-sm hover:shadow-md transition-all">
+                        <Link 
+                            key={pick.title} 
+                            href={pick.title.includes("Coffee") ? "/tours?search=coffee" : "/tours?search=hiking"}
+                            className="bg-white p-5 rounded-[2.5rem] border border-gray-100 flex items-center justify-between group shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
+                        >
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 ${pick.color} rounded-2xl flex items-center justify-center`}>
+                                <div className={`w-12 h-12 ${pick.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                                     <pick.icon className={`w-5 h-5 ${pick.tColor}`} />
                                 </div>
                                 <div>
@@ -265,7 +269,7 @@ function WhatsHappeningSection() {
                             <span className="text-[8px] font-black text-gray-400 border border-gray-100 px-2.5 py-1.5 rounded-full uppercase tracking-widest group-hover:bg-[#1A1612] group-hover:text-white transition-all">
                                 {pick.tag}
                             </span>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             </div>
@@ -283,15 +287,15 @@ function ThisWeekSection() {
                 </div>
             </div>
             
-            <div className="bg-[#1A1612] rounded-[3.5rem] p-8 shadow-2xl relative overflow-hidden group">
+            <Link href="/calendar" className="block bg-[#1A1612] rounded-[3.5rem] p-8 shadow-2xl relative overflow-hidden group active:scale-[0.98] transition-all">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#C9973B]/5 rounded-full blur-[80px] group-hover:scale-125 transition-transform duration-1000" />
                 
                 {/* Weather Strip */}
                 <div className="flex justify-between items-center px-4 mb-8 border-b border-white/5 pb-8">
                     {[
                         { day: "Today", temp: "24°C", icon: "☀️" },
-                        { day: "Tue", temp: "23°C", icon: "🌤️" },
-                        { day: "Wed", temp: "25°C", icon: "☀️" },
+                        { day: new Date(Date.now() + 86400000).toLocaleDateString('en-US', { weekday: 'short' }), temp: "23°C", icon: "🌤️" },
+                        { day: new Date(Date.now() + 172800000).toLocaleDateString('en-US', { weekday: 'short' }), temp: "25°C", icon: "☀️" },
                     ].map((w) => (
                         <div key={w.day} className="flex flex-col items-center gap-2">
                             <span className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.2em]">{w.day}</span>
@@ -307,7 +311,7 @@ function ThisWeekSection() {
                         { event: "Selam Music Fest", type: "FRI-SUN", icon: Sparkles, badge: "FESTIVAL" },
                         { event: "Buna Coffee Markets", type: "TUE-WED", icon: UtensilsCrossed, badge: "LOCAL" }
                     ].map((item) => (
-                        <div key={item.event} className="bg-white/5 rounded-3xl p-5 flex items-center justify-between border border-white/5 hover:border-[#C9973B]/30 transition-colors">
+                        <div key={item.event} className="bg-white/5 rounded-3xl p-5 flex items-center justify-between border border-white/5 group-hover:border-[#C9973B]/30 transition-colors">
                             <div className="flex items-center gap-4">
                                 <div className="w-8 h-8 bg-[#C9973B]/20 rounded-lg flex items-center justify-center">
                                     <item.icon className="w-4 h-4 text-[#C9973B]" />
@@ -323,9 +327,9 @@ function ThisWeekSection() {
                 </div>
                 
                 <div className="mt-8 flex justify-center">
-                     <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.4em]">Full Calendar →</p>
+                     <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.4em] group-hover:text-[#C9973B] transition-colors">Full Event Calendar →</p>
                 </div>
-            </div>
+            </Link>
         </div>
     );
 }
@@ -356,11 +360,11 @@ function FeaturedStays() {
           ))
           : data?.places?.map((place: PlaceData) => (
               <Link key={place.id} href={`/place/${place.slug}`} className="shrink-0 w-72 bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/30 overflow-hidden border border-gray-50 group flex flex-col hover:-translate-y-2 transition-all duration-500">
-                <div className="relative h-56 overflow-hidden">
+                  <div className="relative aspect-square sm:h-56 overflow-hidden">
                   <VerifiedImage
                     src={getPrimaryVerifiedImage(place)}
                     alt={place.name}
-                    className="w-full h-full group-hover:scale-110 transition-transform duration-1000 ease-out"
+                    className="w-full h-full group-hover:scale-110 transition-transform duration-1000 ease-out object-cover"
                     entityType={place.type as any}
                     showBadge={false}
                   />
@@ -389,8 +393,8 @@ export default function HomePage() {
       <HeroSection />
       <TrustStrip />
       
-      <div className="space-y-16 pb-12">
-        <ArrivalEssentialsSection />
+      <div className="space-y-16 pb-12 overflow-hidden">
+        <JustLandedSection />
         <WhatsHappeningSection />
         <ThisWeekSection />
         <FeaturedStays />

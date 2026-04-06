@@ -18,10 +18,13 @@ export async function getPlacesServer({
   const where: any = { isActive: true, status: 'APPROVED' };
 
   if (types) {
-    const typeList = types.split(",").map((t) => t.trim());
+    const rawTypes = types.split(",").map((t) => t.trim());
+    // Auto-expand types to handle both hotel/Hotel casing
+    const typeList = [...rawTypes, ...rawTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase())];
+    
     if (typeList.includes("must-see")) {
       where.featured = true;
-      const otherTypes = typeList.filter(t => t !== "must-see");
+      const otherTypes = typeList.filter(t => t !== "must-see" && t !== "Must-see");
       if (otherTypes.length > 0) {
         where.type = { in: otherTypes };
       }

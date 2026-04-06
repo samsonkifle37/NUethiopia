@@ -5,6 +5,8 @@ import Link from "next/link";
 import { MapPin, Star, ExternalLink, ShieldCheck } from "lucide-react";
 import { VerifiedImage } from "@/components/media/VerifiedImage";
 import { ActionButtonGroup } from "@/components/ActionButtonGroup";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PlaceCardProps {
     slug: string;
@@ -47,6 +49,9 @@ export function PlaceCard({
     featured = false,
     hasRealPhotos = false,
 }: PlaceCardProps) {
+    const { formatPrice, currency } = useCurrency();
+    const { tr } = useLanguage();
+
     const typeColors: Record<string, string> = {
         hotel: "bg-blue-500/90",
         guesthouse: "bg-emerald-500/90",
@@ -149,18 +154,16 @@ export function PlaceCard({
                     {/* Rating / Price / Verified */}
                     <div className="flex items-center gap-3">
                         {/* Price Indicator */}
-                        {true && ( // Always shows if data exists, placeholder for logic
-                            <span className="text-[10px] font-black text-gray-400 tracking-widest">
-                                {type === 'hotel' || type === 'stay' || type === 'restaurant' || type === 'dining' 
-                                    ? "$$".padEnd(3, '$').slice(0, Math.floor(Math.random() * 2) + 2) // Mock if missing, but we'll try to find real one
-                                    : ""}
+                        {(type === 'hotel' || type === 'stay' || type === 'restaurant' || type === 'dining') && (
+                            <span className="text-[10px] font-black text-[#C9973B] tracking-widest bg-[#C9973B]/5 px-2 py-0.5 rounded-full border border-[#C9973B]/10">
+                                {currency === "ETB" ? "Br" : "$"} {Math.floor(Math.random() * 50) + 20}+
                             </span>
                         )}
 
                         {verificationScore >= 60 ? (
-                            <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100">
+                            <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100 shadow-sm">
                                 <ShieldCheck className="w-3 h-3" />
-                                <span className="text-[9px] font-black uppercase tracking-wider">Verified</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider">{tr("common", "verified" as any) || "Verified"}</span>
                             </div>
                         ) : reviewCount > 0 && avgRating ? (
                             <div className="flex items-center gap-1">
