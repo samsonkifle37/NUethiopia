@@ -156,7 +156,7 @@ export function PlaceCard({
                         {/* Price Indicator */}
                         {(type === 'hotel' || type === 'stay' || type === 'restaurant' || type === 'dining') && (
                             <span className="text-[10px] font-black text-[#C9973B] tracking-widest bg-[#C9973B]/5 px-2 py-0.5 rounded-full border border-[#C9973B]/10">
-                                {currency === "ETB" ? "Br" : "$"} {Math.floor(Math.random() * 50) + 20}+
+                                {formatPrice(500, "ETB")}
                             </span>
                         )}
 

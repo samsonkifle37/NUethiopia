@@ -71,7 +71,7 @@ export default function CurrencyPage() {
     const toLabel   = toETB ? "🇪🇹 ETB" : `${selectedCur.flag} ${selectedCur.code}`;
 
     return (
-        <div className="space-y-6 pt-4 pb-24 px-1">
+        <div className="space-y-6 pt-4 pb-24 px-4">
             {/* Header */}
             <header className="space-y-2">
                 <Link href="/" className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors mb-2">

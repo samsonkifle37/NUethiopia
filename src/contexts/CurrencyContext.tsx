@@ -26,17 +26,23 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     };
 
     const formatPrice = (amount: number, fromCurrency: Currency = "ETB") => {
-        const rate = 120; // Mock rate ETB/USD
+        // Mock rates
+        const rates = {
+            USD: 128.5,
+            EUR: 138.2,
+            ETB: 1
+        };
         
-        if (currency === "USD" && fromCurrency === "ETB") {
-            return `$${(amount / rate).toFixed(2)}`;
+        let baseAmount = amount * (rates[fromCurrency] || 1);
+        
+        if (currency === "USD") {
+            return `$${(baseAmount / rates.USD).toFixed(2)}`;
+        }
+        if (currency === "EUR") {
+            return `€${(baseAmount / rates.EUR).toFixed(2)}`;
         }
         
-        if (currency === "ETB" && fromCurrency === "USD") {
-            return `${(amount * rate).toLocaleString()} ETB`;
-        }
-
-        return currency === "USD" ? `$${amount.toFixed(2)}` : `${amount.toLocaleString()} ETB`;
+        return `${baseAmount.toLocaleString()} ETB`;
     };
 
     return (

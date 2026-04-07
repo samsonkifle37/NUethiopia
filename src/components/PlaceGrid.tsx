@@ -96,7 +96,7 @@ export function PlaceGrid({
     const totalCount = data?.pages[0]?.total || 0;
 
     return (
-        <div className="space-y-6 pt-4">
+        <div className="space-y-6 pt-4 px-4">
             {/* Header */}
             <div className="flex justify-between items-center px-1">
                 <h1 className="text-2xl font-black tracking-tight uppercase">

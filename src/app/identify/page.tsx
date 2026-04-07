@@ -3,153 +3,135 @@
 import { 
   Camera, Upload, Sparkles, X, 
   MapPin, Info, ArrowRight, Share2, 
-  Bookmark, CheckCircle, Search, Bird, Sprout, Cat, RefreshCcw, AlertTriangle
+  Bookmark, CheckCircle, Search, RefreshCcw, AlertTriangle,
+  Plus, Image as ImageIcon, Send, History, ChevronLeft
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
 
-interface IdentificationResult {
-  match: {
-    id: string;
-    name: string;
-    scientificName: string | null;
-    type: "ANIMAL" | "PLANT" | "BIRD";
-    description: string;
-    habitat: string;
-    funFact: string | null;
-    imageUrl: string;
-    regionTags: string[];
-  } | null;
-  confidence: number;
-  alternatives: any[];
-  category?: string;
-  error?: string;
+type Stage = "SELECT" | "FORM" | "SUBMITTING" | "SUCCESS" | "MY_SUBMISSIONS" | "ERROR";
+
+interface Submission {
+  id: string;
+  name: string;
+  category: string;
+  area: string;
+  description: string;
+  photos: string[];
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: number;
 }
 
-const typeIcons = {
-  ANIMAL: Cat,
-  PLANT: Sprout,
-  BIRD: Bird
-};
+const CATEGORIES = [
+  "Viewpoint", "Landmark", "Café", "Market", 
+  "Museum", "Park", "Culture", "Hidden Gem", 
+  "Food Spot", "Event Space"
+];
 
-// --- Helper Functions ---
-
-/**
- * Resizes and compresses an image on the client side to stay under the Vercel limit
- * and reduce memory consumption in the browser. 
- * High-res iPhone photos are often 10-20MB which crashes memory-restricted mobile Safari.
- */
-async function compressImage(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.src = url;
-        img.onload = () => {
-            URL.revokeObjectURL(url);
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1000;
-            const MAX_HEIGHT = 1000;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-            } else {
-                if (height > MAX_HEIGHT) {
-                    width *= MAX_HEIGHT / height;
-                    height = MAX_HEIGHT;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                reject(new Error("Canvas context failed"));
-                return;
-            }
-            ctx.drawImage(img, 0, 0, width, height);
-            // Return compressed base64
-            resolve(canvas.toDataURL('image/jpeg', 0.82));
-        };
-        img.onerror = (err) => {
-            URL.revokeObjectURL(url);
-            reject(err);
-        };
-    });
-}
-
-export default function AIIdentify() {
-  const [stage, setStage] = useState<"SELECT" | "PROCESSING" | "RESULT" | "ERROR">("SELECT");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [result, setResult] = useState<IdentificationResult | null>(null);
+export default function AddDiscovery() {
+  const [stage, setStage] = useState<Stage>("SELECT");
+  const [form, setForm] = useState({
+    name: "",
+    category: "Hidden Gem",
+    area: "",
+    description: "",
+    photos: [] as string[]
+  });
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Use URL.createObjectURL for the high-quality local preview, 
-  // keeping the compressed one for the API payload only.
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
+  // Load submissions from localStorage on mount
   useEffect(() => {
-    // Cleanup Object URLs to avoid memory leaks
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const saved = localStorage.getItem("nu_addis_submissions");
+    if (saved) {
+      try {
+        setSubmissions(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to load submissions");
+      }
+    }
+  }, []);
+
+  // Save submissions to localStorage
+  const saveSubmissions = (newSubs: Submission[]) => {
+    setSubmissions(newSubs);
+    localStorage.setItem("nu_addis_submissions", JSON.stringify(newSubs));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Convert to Base64 for local persistence demonstration
+    const newPhotos: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
+        
+        const reader = new FileReader();
+        const p = new Promise<string>((resolve) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+        });
+        newPhotos.push(await p);
+    }
+    
+    setForm(prev => ({ ...prev, photos: [...prev.photos, ...newPhotos] }));
+    if (stage === 'SELECT') setStage('FORM');
+  };
+
+  const handleSubmit = async () => {
+    if (!form.name || !form.area || !form.description) {
+        setErrorMsg("Please fill in all required fields.");
+        setStage("ERROR");
+        return;
+    }
+
+    setStage("SUBMITTING");
+    
+    // Simulate API delay
+    setTimeout(() => {
+        const newSubmission: Submission = {
+            id: Math.random().toString(36).substring(7),
+            ...form,
+            status: "PENDING",
+            createdAt: Date.now()
+        };
+        saveSubmissions([newSubmission, ...submissions]);
+        setStage("SUCCESS");
+    }, 1500);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+        title: "Check out this Addis discovery on NU",
+        text: `I found a great place to see in Addis on NU: ${form.name || 'Addis Local Gem'}`,
+        url: window.location.origin
     };
-  }, [previewUrl]);
 
-  const handleIdentify = async (file: File) => {
     try {
-      setStage("PROCESSING");
-      
-      // 1. Create local preview (efficient)
-      const pUrl = URL.createObjectURL(file);
-      setPreviewUrl(pUrl);
-      setSelectedImage(pUrl);
-
-      // 2. Compress image before sending (Vercel limit safety)
-      const compressedImgData = await compressImage(file);
-
-      // 3. Identification request
-      const res = await fetch("/api/species/identify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: compressedImgData }),
-      });
-
-      if (!res.ok) {
-        throw new Error(res.status === 413 ? "Image too large" : "Service unstable");
-      }
-
-      const data = await res.json();
-      
-      if (!data || data.error) {
-          throw new Error(data.error || "Nature report failed to load");
-      }
-
-      setResult(data);
-      setStage("RESULT");
-    } catch (err: any) {
-      console.error("AI Identify Error:", err);
-      setErrorMsg(err.message || "Something went wrong in the wild.");
-      setStage("ERROR");
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+            await navigator.clipboard.writeText(shareData.url);
+            alert("Link copied to clipboard!");
+        }
+    } catch (err) {
+        console.error("Error sharing:", err);
     }
   };
 
-  const onFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Basic size guard before processing
-      if (file.size > 20 * 1024 * 1024) { // 20MB upper limit for RAW
-          setErrorMsg("File is significantly too large (Max 20MB)");
-          setStage("ERROR");
-          return;
-      }
-      handleIdentify(file);
-    }
+  const resetForm = () => {
+    setForm({
+        name: "",
+        category: "Hidden Gem",
+        area: "",
+        description: "",
+        photos: []
+    });
+    setStage("SELECT");
   };
 
   return (
@@ -159,13 +141,26 @@ export default function AIIdentify() {
         <div className="absolute inset-0 bg-cover bg-center grayscale opacity-10 pointer-events-none" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=2073&auto=format&fit=crop')" }} />
       )}
 
-      {/* Header Overlay (Floating icons) */}
+      {/* Header Overlay */}
       <div className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50">
-        <Link href="/" className="bg-white/20 backdrop-blur-xl p-3 rounded-2xl border border-white/20 text-[#1A1612]">
-            <X className="w-5 h-5" />
-        </Link>
-        <button className="bg-[#C9973B] text-white p-3 rounded-2xl border border-white/20 shadow-xl shadow-[#C9973B]/20">
-            <Sparkles className="w-5 h-5" />
+        <div className="flex gap-2">
+            {stage !== 'SELECT' && (
+                <button 
+                    onClick={() => setStage(stage === 'ERROR' || stage === 'SUCCESS' ? 'SELECT' : 'SELECT')}
+                    className="bg-white/20 backdrop-blur-xl p-3 rounded-2xl border border-white/20 text-[#1A1612]"
+                >
+                    <ChevronLeft className="w-5 h-5" />
+                </button>
+            )}
+            <Link href="/" className="bg-white/20 backdrop-blur-xl p-3 rounded-2xl border border-white/20 text-[#1A1612]">
+                <X className="w-5 h-5" />
+            </Link>
+        </div>
+        <button 
+            onClick={handleShare}
+            className="bg-[#C9973B] text-white p-3 rounded-2xl border border-white/20 shadow-xl shadow-[#C9973B]/20 active:scale-95 transition-all"
+        >
+            <Share2 className="w-5 h-5" />
         </button>
       </div>
 
@@ -173,23 +168,23 @@ export default function AIIdentify() {
         <div className="pt-24 px-8 space-y-12 max-w-2xl mx-auto flex flex-col items-center text-center animate-in fade-in duration-500">
             <div className="space-y-4">
                 <div className="w-20 h-20 bg-[#C9973B]/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6">
-                    <Camera className="w-10 h-10 text-[#C9973B]" />
+                    <MapPin className="w-10 h-10 text-[#C9973B]" />
                 </div>
-                <h1 className="text-4xl font-black text-[#1A1612] italic uppercase tracking-tighter leading-tight">Identify Ethiopia</h1>
-                <p className="text-gray-400 text-sm font-bold uppercase tracking-widest max-w-[240px] mx-auto leading-relaxed">
-                    Point camera at any animal or plant to learn instantly.
+                <h1 className="text-4xl font-black text-[#1A1612] italic uppercase tracking-tighter leading-tight">Add Things to See in Addis</h1>
+                <p className="text-gray-400 text-sm font-bold uppercase tracking-widest max-w-[280px] mx-auto leading-relaxed">
+                    Share a place, hidden gem, or local experience others should discover.
                 </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 w-full">
                 <button 
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setStage("FORM")}
                     className="group bg-[#1A1612] text-white rounded-[2.5rem] p-8 flex flex-col items-center gap-4 transition-all hover:bg-[#C9973B] shadow-2xl active:scale-95"
                 >
                     <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Camera className="w-6 h-6 text-[#C9973B]" />
+                        <Plus className="w-6 h-6 text-[#C9973B]" />
                     </div>
-                    <span className="text-xs font-black uppercase tracking-[0.25em]">Capture Vision</span>
+                    <span className="text-xs font-black uppercase tracking-[0.25em]">Add a Place</span>
                 </button>
                 <div className="grid grid-cols-2 gap-4">
                     <button 
@@ -197,36 +192,213 @@ export default function AIIdentify() {
                         className="bg-white rounded-[2.5rem] p-6 flex flex-col items-center gap-3 border border-gray-100 shadow-sm active:scale-95"
                     >
                          <Upload className="w-5 h-5 text-gray-400" />
-                         <span className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Upload Photo</span>
+                         <span className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Upload Photos</span>
                     </button>
-                    <Link 
-                        href="/favorites"
+                    <button 
+                        onClick={() => setStage("MY_SUBMISSIONS")}
                         className="bg-white rounded-[2.5rem] p-6 flex flex-col items-center gap-3 border border-gray-100 shadow-sm active:scale-95"
                     >
-                         <Bookmark className="w-5 h-5 text-gray-400" />
-                         <span className="text-[9px] font-black uppercase text-gray-500 tracking-widest">My Collection</span>
-                    </Link>
+                         <History className="w-5 h-5 text-gray-400" />
+                         <span className="text-[9px] font-black uppercase text-gray-500 tracking-widest">My Submissions</span>
+                    </button>
                 </div>
             </div>
-            <input type="file" hidden ref={fileInputRef} onChange={onFileUpload} accept="image/*" />
+            <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} accept="image/*" multiple />
         </div>
       )}
 
-      {stage === 'PROCESSING' && (
+      {stage === 'FORM' && (
+        <div className="pt-24 px-6 space-y-8 animate-in slide-in-from-bottom-10 duration-500">
+            <div className="space-y-2">
+                <h2 className="text-2xl font-black text-[#1A1612] uppercase italic tracking-tighter italic">Submission Form</h2>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Help others discover Addis</p>
+            </div>
+
+            <div className="space-y-6">
+                {/* Photo Upload Section */}
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.2em]">Photos</label>
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                        <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="shrink-0 w-24 h-24 bg-gray-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 text-gray-400 hover:text-[#C9973B] hover:border-[#C9973B]/30 transition-all"
+                        >
+                            <ImageIcon className="w-6 h-6 mb-1" />
+                            <span className="text-[8px] font-black uppercase tracking-widest">Add</span>
+                        </button>
+                        {form.photos.map((photo, i) => (
+                            <div key={i} className="shrink-0 w-24 h-24 rounded-2xl overflow-hidden relative group">
+                                <img src={photo} className="w-full h-full object-cover" />
+                                <button 
+                                    onClick={() => setForm(f => ({ ...f, photos: f.photos.filter((_, idx) => idx !== i) }))}
+                                    className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Input Fields */}
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.2em]">Place Name</label>
+                        <input 
+                            type="text" 
+                            placeholder="e.g. Hidden Garden Café"
+                            className="w-full bg-white border border-gray-100 p-4 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#C9973B]/20"
+                            value={form.name}
+                            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.2em]">Category</label>
+                        <div className="flex flex-wrap gap-2">
+                            {CATEGORIES.map(cat => (
+                                <button 
+                                    key={cat}
+                                    onClick={() => setForm(f => ({ ...f, category: cat }))}
+                                    className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                                        form.category === cat 
+                                        ? "bg-[#1A1612] text-white shadow-lg" 
+                                        : "bg-white text-gray-400 border border-gray-100"
+                                    }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.2em]">Area / Location</label>
+                        <input 
+                            type="text" 
+                            placeholder="e.g. Bole, near Friendship Park"
+                            className="w-full bg-white border border-gray-100 p-4 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#C9973B]/20"
+                            value={form.area}
+                            onChange={e => setForm(f => ({ ...f, area: e.target.value }))}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.2em]">Description</label>
+                        <textarea 
+                            rows={4}
+                            placeholder="Tell us what makes this place special..."
+                            className="w-full bg-white border border-gray-100 p-4 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#C9973B]/20 resize-none"
+                            value={form.description}
+                            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                        />
+                    </div>
+                </div>
+
+                <button 
+                    onClick={handleSubmit}
+                    className="w-full bg-[#1A1612] text-white p-5 rounded-2xl flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] transition-all group"
+                >
+                    <span className="text-[11px] font-black uppercase tracking-[0.3em]">Submit for Review</span>
+                    <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                </button>
+            </div>
+            <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} accept="image/*" multiple />
+        </div>
+      )}
+
+      {stage === 'SUBMITTING' && (
         <div className="h-screen flex flex-col items-center justify-center p-8 space-y-8 animate-in fade-in duration-700">
             <div className="relative">
-                <div className="w-64 h-64 rounded-[3rem] overflow-hidden border-4 border-[#C9973B] shadow-2xl relative">
-                    <img src={selectedImage || ''} className="w-full h-full object-cover blur-[2px] opacity-70" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612]/60 to-transparent" />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-20 border-4 border-[#C9973B] border-t-transparent rounded-full animate-spin shadow-2xl shadow-[#C9973B]/20" />
+                <div className="w-32 h-32 bg-[#C9973B]/10 rounded-[2.5rem] flex items-center justify-center animate-pulse">
+                    <Sparkles className="w-12 h-12 text-[#C9973B]" />
                 </div>
             </div>
             <div className="text-center space-y-2">
-                <h2 className="text-[#1A1612] text-xl font-black uppercase italic tracking-tighter">Analyzing Nature</h2>
-                <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] animate-pulse">Running Ethiopia AI Core</p>
+                <h2 className="text-[#1A1612] text-xl font-black uppercase italic tracking-tighter">Processing</h2>
+                <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] animate-pulse">Uploading to NU Core</p>
             </div>
+        </div>
+      )}
+
+      {stage === 'SUCCESS' && (
+        <div className="h-screen flex flex-col items-center justify-center p-8 space-y-8 text-center animate-in zoom-in-95 duration-500">
+             <div className="w-24 h-24 bg-emerald-50 rounded-[2.5rem] flex items-center justify-center shadow-xl shadow-emerald-100 mb-4 scale-110">
+                <CheckCircle className="w-12 h-12 text-emerald-500" />
+            </div>
+            <div className="text-center space-y-3">
+                <h2 className="text-[#1A1612] text-3xl font-black uppercase italic tracking-tighter">Success!</h2>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest max-w-[280px] mx-auto leading-relaxed">
+                    Your discovery has been submitted for review. Help people discover Addis by sharing this page.
+                </p>
+            </div>
+            
+            <div className="flex flex-col gap-4 w-full max-w-xs">
+                <button 
+                    onClick={handleShare}
+                    className="bg-[#C9973B] text-[#1A1612] p-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] shadow-xl shadow-[#C9973B]/20 animate-bounce transition-all active:scale-95"
+                >
+                    Share Discovery
+                </button>
+                <button 
+                    onClick={resetForm}
+                    className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-4 hover:text-[#1A1612] transition-colors"
+                >
+                    Add Another Place
+                </button>
+            </div>
+        </div>
+      )}
+
+      {stage === 'MY_SUBMISSIONS' && (
+        <div className="pt-24 px-6 space-y-8 animate-in slide-in-from-right duration-500">
+             <div className="flex justify-between items-end">
+                <div className="space-y-1">
+                    <p className="text-[9px] font-black text-[#C9973B] uppercase tracking-[0.3em]">History</p>
+                    <h2 className="text-2xl font-black text-[#1A1612] uppercase tracking-tighter italic italic">My Submissions</h2>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                {submissions.length === 0 ? (
+                    <div className="bg-white p-12 rounded-[2.5rem] border border-gray-100 text-center space-y-4">
+                        <Info className="w-8 h-8 text-gray-200 mx-auto" />
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">No submissions yet</p>
+                    </div>
+                ) : (
+                    submissions.map(sub => (
+                        <div key={sub.id} className="bg-white p-5 rounded-2xl border border-gray-50 shadow-sm flex gap-4 items-center">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+                                {sub.photos[0] ? (
+                                    <img src={sub.photos[0]} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <ImageIcon className="w-6 h-6 text-gray-200" />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-black text-[#1A1612] uppercase tracking-tight truncate">{sub.name}</h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[8px] font-black text-gray-400 border border-gray-100 px-2 py-0.5 rounded-md uppercase">{sub.category}</span>
+                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase ${
+                                        sub.status === 'PENDING' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                                    }`}>
+                                        {sub.status}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            <button 
+                onClick={() => setStage("SELECT")}
+                className="w-full text-gray-400 text-[10px] font-black uppercase tracking-widest mt-8 flex items-center justify-center gap-2"
+            >
+                <ChevronLeft className="w-4 h-4" /> Back to menu
+            </button>
         </div>
       )}
 
@@ -236,161 +408,18 @@ export default function AIIdentify() {
                 <AlertTriangle className="w-12 h-12 text-rose-500" />
             </div>
             <div className="text-center space-y-3">
-                <h2 className="text-[#1A1612] text-2xl font-black uppercase italic tracking-tighter">Signal Interrupted</h2>
+                <h2 className="text-[#1A1612] text-2xl font-black uppercase italic tracking-tighter">Oops!</h2>
                 <p className="text-xs text-gray-400 font-bold uppercase tracking-widest max-w-[240px] mx-auto leading-relaxed">
                     {errorMsg}
                 </p>
             </div>
             <button 
-                onClick={() => setStage("SELECT")}
+                onClick={() => setStage("FORM")}
                 className="bg-[#1A1612] text-[#C9973B] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-[#1A1612]/20 flex items-center gap-2 group transition-all"
             >
-                <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> Try Again
+                <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> Fix Errors
             </button>
         </div>
-      )}
-
-      {stage === 'RESULT' && result && result.match && (
-        <div className="animate-in slide-in-from-bottom-6 duration-700">
-            {/* Immersive Photo Hero */}
-            <div className="relative h-[65vh] w-full overflow-hidden rounded-b-[4rem] shadow-3xl">
-                <img src={result.match.imageUrl} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#FAFAF8] via-transparent to-[#1A1612]/20" />
-                
-                {/* Confidence Badge */}
-                <div className="absolute bottom-12 left-8 bg-white/95 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-2xl border border-white/20 backdrop-blur-md">
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-[#C9973B] animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#1A1612] italic">
-                            {Math.round(result.confidence * 100)}% Confidence
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content Sheet */}
-            <div className="px-8 mt-[-3rem] relative z-20 space-y-8">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        {typeIcons[result.match.type] && (
-                            <div className="w-8 h-8 bg-[#C9973B] rounded-lg flex items-center justify-center shadow-lg">
-                                {(() => {
-                                    const Icon = typeIcons[result.match.type];
-                                    return <Icon className="w-4 h-4 text-white" />;
-                                })()}
-                            </div>
-                        )}
-                        <span className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.3em] italic">{result.match.scientificName}</span>
-                    </div>
-                    <div className="flex justify-between items-start">
-                        <h1 className="text-4xl font-black text-[#1A1612] italic uppercase tracking-tighter leading-none pr-4">{result.match.name}</h1>
-                        <div className="flex gap-2">
-                            <button className="bg-white p-3 rounded-2xl shadow-xl shadow-gray-200/50 active:scale-90 transition-all border border-gray-50">
-                                <Share2 className="w-5 h-5 text-gray-500" />
-                            </button>
-                            <button className="bg-white p-3 rounded-2xl shadow-xl shadow-gray-200/50 active:scale-90 transition-all border border-gray-50">
-                                <Bookmark className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Explorer Facts */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-emerald-50 rounded-[2.5rem] p-6 border border-emerald-100 flex flex-col gap-2 shadow-sm">
-                        <MapPin className="w-5 h-5 text-emerald-500" />
-                        <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Native Habitat</h4>
-                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider line-clamp-2">{result.match.habitat}</p>
-                    </div>
-                    <div className="bg-blue-50 rounded-[2.5rem] p-6 border border-blue-100 flex flex-col gap-2 shadow-sm">
-                        <Search className="w-5 h-5 text-blue-500" />
-                        <h4 className="text-[9px] font-black uppercase tracking-widest text-blue-600">Endemic In</h4>
-                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider line-clamp-2">{result.match.regionTags.join(', ')}</p>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Info className="w-4 h-4 text-[#C9973B]" />
-                        <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 italic">Nature Report</h3>
-                    </div>
-                    <p className="text-sm font-medium text-gray-600 leading-relaxed italic border-l-2 border-gray-100 pl-4 py-1">
-                        {result.match.description}
-                    </p>
-                </div>
-
-                {result.match.funFact && (
-                    <div className="bg-[#1A1612] rounded-[3rem] p-8 text-white relative overflow-hidden group shadow-2xl">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9973B]/10 rounded-full blur-3xl" />
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-10 h-10 bg-[#C9973B] rounded-xl flex items-center justify-center text-[#1A1612]">
-                                <Sparkles className="w-5 h-5" />
-                            </div>
-                            <h4 className="text-[11px] font-black uppercase tracking-widest italic text-[#C9973B]">Did You Know?</h4>
-                        </div>
-                        <p className="text-xs font-medium text-gray-300 leading-relaxed relative z-10 leading-relaxed pb-2">
-                            {result.match.funFact}
-                        </p>
-                    </div>
-                )}
-
-                {/* Not 100% Sure Handling */}
-                {result.confidence < 0.9 && result.alternatives && result.alternatives.length > 0 && (
-                    <div className="space-y-4 pt-4">
-                         <div className="flex items-center gap-2 px-2">
-                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Close Matches</h3>
-                        </div>
-                        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 px-2">
-                            {result.alternatives.map((alt: any) => (
-                                <div key={alt.id} className="shrink-0 w-52 bg-white p-3 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3 active:scale-95 transition-transform">
-                                    <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 shadow-md">
-                                        <img src={alt.imageUrl} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h5 className="text-[10px] font-black text-gray-900 truncate uppercase tracking-tight">{alt.name}</h5>
-                                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.1em]">{alt.type}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                <div className="flex items-center justify-between pb-12 gap-4">
-                   <button 
-                        onClick={() => {
-                          setStage("SELECT");
-                          setResult(null);
-                        }}
-                        className="text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-[#1A1612] transition-colors shrink-0"
-                   >
-                       ← Try Another
-                   </button>
-                   <Link href="/favorites" className="bg-[#1A1612] text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shadow-xl shadow-[#1A1612]/30 flex-1 justify-center active:scale-95 transition-transform">
-                       Add to Collection <ArrowRight className="w-4 h-4 ml-1" />
-                   </Link>
-                </div>
-            </div>
-        </div>
-      )}
-
-      {/* No Match Result Handling */}
-      {stage === 'RESULT' && result && !result.match && (
-          <div className="h-[80vh] flex flex-col items-center justify-center p-8 space-y-6 text-center animate-in zoom-in-95 duration-500">
-               <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mb-4">
-                <Search className="w-10 h-10 text-gray-300" />
-              </div>
-              <h2 className="text-[#1A1612] text-2xl font-black uppercase italic tracking-tighter">Species Unseen</h2>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest max-w-[240px] mx-auto leading-relaxed">
-                  Nature holds mysteries. We couldn't definitively identify this one.
-              </p>
-              <button 
-                onClick={() => setStage("SELECT")}
-                className="bg-[#1A1612] text-[#C9973B] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-[#1A1612]/20"
-              >
-                  Try Again
-              </button>
-          </div>
       )}
 
       <BottomNav />

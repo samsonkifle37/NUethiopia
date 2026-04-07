@@ -44,7 +44,7 @@ export default function EmergencyPage() {
                 </div>
             </div>
 
-            <div className="px-6 py-8 space-y-8 -mt-6">
+            <div className="px-4 py-8 space-y-8 -mt-6">
                 {/* Critical Quick-Dial */}
                 <div className="grid grid-cols-2 gap-4">
                     {EMERGENCY_CONTACTS.slice(0, 2).map(contact => (

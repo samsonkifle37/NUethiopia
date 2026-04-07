@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const NAV_KEYS = [
   { href: "/",            icon: Home,            key: "home"        },
   { href: "/stays",       icon: BedDouble,       key: "stays"       },
-  { href: "/identify",    icon: Camera,          key: "identify", variant: "special" },
+  { href: "/transport",   icon: Car,             key: "transport", variant: "special" },
   { href: "/tours",       icon: Map,             key: "tours"       },
   { href: "/profile",     icon: User,            key: "profile"     },
 ];
@@ -33,7 +33,7 @@ export function BottomNav() {
                     className="flex flex-col items-center gap-0.5 -mt-8 bg-[#1A1612] text-[#C9973B] p-4 rounded-[2rem] shadow-2xl shadow-[#1A1612]/30 border-4 border-white active:scale-90 transition-all z-20"
                 >
                     <Icon className="w-6 h-6" strokeWidth={2.5} />
-                    <span className="text-[7px] font-black uppercase tracking-widest text-white/50">{tr("nav", "identify") || "Identify"}</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest text-white/50">{tr("nav", "transport") || "Transport"}</span>
                 </Link>
               );
           }

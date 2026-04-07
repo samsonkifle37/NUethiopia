@@ -1,8 +1,8 @@
 export const translations = {
   en: {
     nav: {
-      home: "Home", stays: "Stays", identify: "Identify", tours: "Tours",
-      dining: "Dining", transport: "Transport", itineraries: "Plans", favorites: "Favorites", profile: "Profile",
+      home: "Home", stays: "Stays", identify: "Add", tours: "Tours",
+      dining: "Dining", transport: "Transport", journal: "Journal", itineraries: "Plans", favorites: "Favorites", profile: "Profile",
     },
     common: {
       seeAll: "See All",
@@ -107,8 +107,8 @@ export const translations = {
   },
   am: {
     nav: {
-      home: "መነሻ", stays: "ማረፊያ", tours: "ጉብኝቶች",
-      dining: "ምግብ ቤቶች", transport: "ትራንስፖርት", itineraries: "መርሃግብር", favorites: "ተወዳጆች", profile: "መገለጫ",
+      home: "መነሻ", stays: "ማረፊያ", identify: "አክል", tours: "ጉብኝቶች",
+      dining: "ምግብ ቤቶች", transport: "ትራንስፖርት", journal: "ጆርናል", itineraries: "መርሃግብር", favorites: "ተወዳጆች", profile: "መገለጫ",
     },
     common: {
       seeAll: "ሁሉንም ይመልከቱ",
@@ -206,7 +206,7 @@ export const translations = {
   om: {
     nav: {
         home: "Mana", stays: "Bultii", tours: "Dawannaa",
-        dining: "Nyaata", transport: "Geejibaa", itineraries: "Karoora", favorites: "Jaallatamoo", profile: "Eenyummaa",
+        dining: "Nyaata", transport: "Geejibaa", journal: "Joornal", itineraries: "Karoora", favorites: "Jaallatamoo", profile: "Eenyummaa",
     },
     common: {
         seeAll: "Hunda Laali",
@@ -242,7 +242,7 @@ export const translations = {
   ti: {
     nav: {
         home: "መበገሲ", stays: "መዕረፊ", tours: "ዑደት",
-        dining: "መግቢ", transport: "ትራንስፖርት", itineraries: "መደብ", favorites: "ዝተመርጹ", profile: "መገለጺ",
+        dining: "መግቢ", transport: "ትራንስፖርት", journal: "ጆርናል", itineraries: "መደብ", favorites: "ዝተመርጹ", profile: "መገለጺ",
     },
     common: {
         seeAll: "ኩሉ ርአ",

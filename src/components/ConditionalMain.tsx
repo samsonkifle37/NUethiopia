@@ -12,7 +12,7 @@ export function ConditionalMain({ children }: { children: React.ReactNode }) {
 
     // Public mobile-first layout
     return (
-        <main className="max-w-lg mx-auto min-h-screen pb-24 px-4">
+        <main className="max-w-lg mx-auto min-h-screen pb-24">
             {children}
         </main>
     );

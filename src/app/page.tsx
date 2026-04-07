@@ -8,10 +8,22 @@ import { getPrimaryVerifiedImage } from "@/lib/images";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Sparkles, BedDouble, Map, UtensilsCrossed, ArrowRight, Star, MapPin, Plane, 
-  Car, Wifi, Banknote, Compass, Navigation, ShieldCheck
+  Car, Wifi, Banknote, Compass, Navigation, ShieldCheck, Plus
 } from "lucide-react";
 import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { useCalendar } from "@/contexts/CalendarContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+
+// ── Shared UI Utilities ──────────────────────
+
+function PageSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`w-full max-w-2xl mx-auto px-4 ${className}`}>
+      {children}
+    </div>
+  );
+}
 
 // ── Shared Types ──────────────────────────────
 
@@ -47,7 +59,7 @@ function HeroSection() {
   const suggestions = rawHome.suggestions || translations.en.home.suggestions;
 
   return (
-    <div className="relative pt-20 pb-20 px-6 rounded-b-[4rem] bg-[#1A1612] overflow-hidden -mx-4 -mt-4 shadow-3xl">
+    <div className="relative pt-20 pb-20 rounded-b-[4rem] bg-[#1A1612] overflow-hidden shadow-3xl">
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=2073&auto=format&fit=crop')] opacity-20 bg-cover bg-center grayscale" />
       <div className="absolute inset-0 bg-gradient-to-b from-[#1A1612]/60 via-[#1A1612] to-[#1A1612]" />
@@ -55,7 +67,7 @@ function HeroSection() {
       {/* Animated Glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9973B]/10 rounded-full blur-[120px] animate-pulse" />
       
-      <div className="relative z-10 flex flex-col items-center text-center space-y-8 max-w-2xl mx-auto">
+      <div className="relative z-10 flex flex-col items-center text-center space-y-8 max-w-2xl mx-auto px-4">
         <div className="flex flex-col items-center">
             <span 
                 className="mb-2 block animate-in fade-in slide-in-from-top duration-1000"
@@ -150,13 +162,13 @@ function JustLandedSection() {
     ];
 
     return (
-        <div className="px-6 py-4 animate-in fade-in slide-in-from-bottom duration-1000 delay-300">
-            <div className="bg-[#1A1612] rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden border border-[#C9973B]/20">
+        <PageSection className="animate-in fade-in slide-in-from-bottom duration-1000 delay-300">
+            <div className="bg-[#1A1612] rounded-2xl p-5 shadow-sm relative overflow-hidden border border-[#C9973B]/20">
                 {/* Background Plane Decoration */}
                 <Plane className="absolute top-[-20px] right-[-20px] w-48 h-48 text-white opacity-[0.03] -rotate-12 pointer-events-none" />
                 
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-8 relative z-10">
+                <div className="flex items-center gap-4 mb-6 relative z-10">
                     <div className="w-12 h-12 bg-[#C9973B] rounded-2xl flex items-center justify-center shadow-lg shadow-[#C9973B]/20">
                         <Plane className="w-6 h-6 text-[#1A1612]" />
                     </div>
@@ -169,7 +181,7 @@ function JustLandedSection() {
                         <Link 
                             key={item.label} 
                             href={item.href}
-                            className="bg-white/5 border border-white/10 p-5 rounded-[2rem] flex flex-col items-center gap-3 transition-all duration-300 hover:bg-white/10 hover:border-[#C9973B]/40 group/btn active:scale-95 text-center focus:ring-2 focus:ring-[#C9973B]/50 outline-none"
+                            className="bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col items-center gap-3 transition-all duration-300 hover:bg-white/10 hover:border-[#C9973B]/40 group/btn active:scale-95 text-center focus:ring-2 focus:ring-[#C9973B]/50 outline-none"
                         >
                             <div className="w-10 h-10 bg-[#C9973B]/10 rounded-xl flex items-center justify-center group-hover/btn:scale-110 transition-transform">
                                 <item.icon className="w-5 h-5 text-[#C9973B]" />
@@ -195,91 +207,80 @@ function JustLandedSection() {
                     ))}
                 </div>
             </div>
-        </div>
+        </PageSection>
     );
 }
 
-function WhatsHappeningSection() {
+function GemsInAddisSection() {
+    const { data: posts, isLoading } = useQuery({
+        queryKey: ["discovery-posts"],
+        queryFn: async () => {
+            const res = await fetch("/api/discovery?limit=5");
+            if (!res.ok) return [];
+            const d = await res.json();
+            return d.posts || [];
+        }
+    });
+
     return (
-        <div className="px-6 space-y-8 py-4">
+        <PageSection className="space-y-6">
             <div className="flex justify-between items-end px-2">
                 <div className="space-y-1">
-                    <p className="text-[9px] font-black text-[#C9973B] uppercase tracking-[0.3em]">Live Context</p>
-                    <h2 className="text-2xl font-black text-[#1A1612] uppercase tracking-tighter italic">What's happening now</h2>
-                </div>
-                <div className="flex items-center gap-1.5 opacity-40">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Addis Live</span>
-                </div>
-            </div>
-            
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 px-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md">Live Now</span>
-                </div>
-                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2">
-                    {[
-                        { title: "Ethio-Jazz Night", loc: "Fendika Center", tag: "LIVE", time: "Tonight", img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=2128&auto=format&fit=crop" },
-                        { title: "Art Expo 2024", loc: "National Museum", tag: "POPULAR", time: "Now", img: "https://images.unsplash.com/photo-1544413647-795175a95444?q=80&w=1974&auto=format&fit=crop" }
-                    ].map((event) => (
-                        <Link key={event.title} href="/tours" className="shrink-0 w-72 bg-[#1A1612] rounded-[3rem] overflow-hidden relative group shadow-2xl shadow-[#1A1612]/20">
-                            <div className="aspect-[16/10] sm:h-44 relative">
-                                <img src={event.img} alt={event.title} className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612] via-transparent to-transparent" />
-                                <div className="absolute top-4 left-4 flex gap-2">
-                                    <span className="bg-rose-600 text-white text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{event.tag}</span>
-                                    <span className="bg-white/10 backdrop-blur-md text-white text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{event.time}</span>
-                                </div>
-                            </div>
-                            <div className="p-6 space-y-2">
-                                <h4 className="text-base font-black text-white uppercase tracking-tight line-clamp-1">{event.title}</h4>
-                                <div className="flex items-center gap-1.5 opacity-60">
-                                    <MapPin className="w-3.5 h-3.5 text-[#C9973B]" />
-                                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">{event.loc}</span>
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-[#C9973B]" />
+                        <p className="text-[9px] font-black text-[#C9973B] uppercase tracking-[0.3em]">Gems in Addis</p>
+                    </div>
+                    <h2 className="text-2xl font-black text-[#1A1612] uppercase tracking-tighter italic">✨ Local Secrets</h2>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Discover hidden spots shared by travelers</p>
                 </div>
             </div>
 
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 px-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Curated Picks</span>
-                </div>
-                <div className="grid grid-cols-1 gap-3">
-                     {[
-                        { title: "Traditional Coffee Ceremony", sub: "Authentic Heritage Experience", tag: "CULTURAL", icon: UtensilsCrossed, color: "bg-orange-50", tColor: "text-orange-500" },
-                        { title: "Sunday Entoto Hikes", sub: "Best viewpoints in the city", tag: "WEEKEND", icon: Map, color: "bg-blue-50", tColor: "text-blue-500" }
-                    ].map((pick) => (
-                        <Link 
-                            key={pick.title} 
-                            href={pick.title.includes("Coffee") ? "/tours?search=coffee" : "/tours?search=hiking"}
-                            className="bg-white p-5 rounded-[2.5rem] border border-gray-100 flex items-center justify-between group shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 ${pick.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                    <pick.icon className={`w-5 h-5 ${pick.tColor}`} />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-black text-[#1A1612] uppercase tracking-tight">{pick.title}</h4>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">{pick.sub}</p>
-                                </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 px-1">
+                {(posts || []).map((post: any) => (
+                    <Link key={post.id} href={`/discover/${post.id}`} className="relative aspect-[4/5] rounded-2xl overflow-hidden group shadow-sm bg-gray-100 border border-gray-50">
+                        <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 text-left">
+                            <p className="text-white text-[10px] font-black uppercase tracking-tight line-clamp-1">{post.title}</p>
+                            <div className="flex items-center gap-1 opacity-60">
+                                <MapPin className="w-2.5 h-2.5 text-[#C9973B]" />
+                                <span className="text-white text-[8px] font-black uppercase tracking-[0.2em]">{post.category}</span>
                             </div>
-                            <span className="text-[8px] font-black text-gray-400 border border-gray-100 px-2.5 py-1.5 rounded-full uppercase tracking-widest group-hover:bg-[#1A1612] group-hover:text-white transition-all">
-                                {pick.tag}
-                            </span>
-                        </Link>
-                    ))}
-                </div>
+                        </div>
+                    </Link>
+                ))}
+                
+                {/* Fallback mock if empty for visual demo */}
+                {(!posts || posts.length === 0) && [
+                    { id: '1', title: 'Sunset at Entoto', cat: 'VIEW', img: 'https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=2073&auto=format&fit=crop' },
+                    { id: '2', title: 'Best Buna in Bole', cat: 'COFFEE', img: 'https://images.unsplash.com/photo-1544413647-795175a95444?q=80&w=1974&auto=format&fit=crop' }
+                ].slice(0, posts?.length || 2).map((mock) => (
+                    <Link key={mock.id} href="/discover" className="relative aspect-[4/5] rounded-2xl overflow-hidden group shadow-sm bg-gray-100 border border-gray-50">
+                        <img src={mock.img} alt={mock.title} className="w-full h-full object-cover opacity-80" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 text-left">
+                            <p className="text-white text-[10px] font-black uppercase tracking-tight">{mock.title}</p>
+                            <span className="text-[#C9973B] text-[8px] font-black uppercase tracking-widest">{mock.cat}</span>
+                        </div>
+                    </Link>
+                ))}
+
+                {/* ADD CTA CARD */}
+                <Link href="/discover/upload" className="relative aspect-[4/5] rounded-2xl overflow-hidden border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-3 bg-white hover:bg-gray-50 transition-all group active:scale-95">
+                    <div className="w-12 h-12 bg-[#1A1612] rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Plus className="w-6 h-6 text-[#C9973B]" />
+                    </div>
+                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">+ Share Gem</span>
+                </Link>
             </div>
-        </div>
+        </PageSection>
     );
 }
 
 function ThisWeekSection() {
+    const { formatDate } = useCalendar();
     return (
-        <div className="px-6 space-y-6 py-4">
+        <PageSection className="space-y-6">
              <div className="flex justify-between items-end px-2">
                 <div className="space-y-1">
                     <p className="text-[9px] font-black text-[#C9973B] uppercase tracking-[0.3em]">Plan Ahead</p>
@@ -287,20 +288,25 @@ function ThisWeekSection() {
                 </div>
             </div>
             
-            <Link href="/calendar" className="block bg-[#1A1612] rounded-[3.5rem] p-8 shadow-2xl relative overflow-hidden group active:scale-[0.98] transition-all">
+            <Link href="/calendar" className="block bg-[#1A1612] rounded-2xl p-5 shadow-sm relative overflow-hidden group active:scale-[0.98] transition-all">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#C9973B]/5 rounded-full blur-[80px] group-hover:scale-125 transition-transform duration-1000" />
                 
                 {/* Weather Strip */}
-                <div className="flex justify-between items-center px-4 mb-8 border-b border-white/5 pb-8">
+                <div className="flex justify-between items-center px-4 mb-6 border-b border-white/5 pb-6">
                     {[
-                        { day: "Today", temp: "24°C", icon: "☀️" },
-                        { day: new Date(Date.now() + 86400000).toLocaleDateString('en-US', { weekday: 'short' }), temp: "23°C", icon: "🌤️" },
-                        { day: new Date(Date.now() + 172800000).toLocaleDateString('en-US', { weekday: 'short' }), temp: "25°C", icon: "☀️" },
+                        { day: "Today", date: new Date(), temp: "24°C", icon: "☀️" },
+                        { day: "Tomorrow", date: new Date(Date.now() + 86400000), temp: "23°C", icon: "🌤️" },
+                        { day: "Later", date: new Date(Date.now() + 172800000), temp: "25°C", icon: "☀️" },
                     ].map((w) => (
                         <div key={w.day} className="flex flex-col items-center gap-2">
-                            <span className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.2em]">{w.day}</span>
+                            <span className="text-[9px] font-black text-[#C9973B] uppercase tracking-[0.2em]">{w.day}</span>
                             <span className="text-2xl drop-shadow-lg">{w.icon}</span>
-                            <span className="text-[12px] font-black text-white">{w.temp}</span>
+                            <div className="flex flex-col items-center">
+                                <span className="text-[12px] font-black text-white">{w.temp}</span>
+                                <span className="text-[7px] font-bold text-white/40 uppercase tracking-tighter">
+                                    {formatDate(w.date)}
+                                </span>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -330,20 +336,21 @@ function ThisWeekSection() {
                      <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.4em] group-hover:text-[#C9973B] transition-colors">Full Event Calendar →</p>
                 </div>
             </Link>
-        </div>
+        </PageSection>
     );
 }
 
 function FeaturedStays() {
   const { tr } = useLanguage();
+  const { formatPrice } = useCurrency();
   const { data, isLoading } = useQuery({
     queryKey: ["home-stays"],
     queryFn: () => fetchPlaces("hotel,guesthouse,apartment,resort", 4),
   });
 
   return (
-    <div className="mt-8 space-y-4 px-2">
-      <div className="flex justify-between items-end px-4">
+    <PageSection className="space-y-4">
+      <div className="flex justify-between items-end px-2">
         <div>
             <p className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.3em] mb-1">Accommodation</p>
             <h2 className="text-2xl font-black tracking-tighter text-[#1A1612] italic uppercase">Authentic Stays</h2>
@@ -353,13 +360,13 @@ function FeaturedStays() {
         </Link>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 px-4">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 px-2">
         {isLoading
           ? [1, 2, 3].map((i) => (
-            <div key={i} className="shrink-0 w-64 h-80 bg-gray-100 rounded-[2.5rem] animate-pulse" />
+            <div key={i} className="shrink-0 w-64 h-80 bg-gray-100 rounded-2xl animate-pulse" />
           ))
           : data?.places?.map((place: PlaceData) => (
-              <Link key={place.id} href={`/place/${place.slug}`} className="shrink-0 w-72 bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/30 overflow-hidden border border-gray-50 group flex flex-col hover:-translate-y-2 transition-all duration-500">
+              <Link key={place.id} href={`/place/${place.slug}`} className="shrink-0 w-72 bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-50 group flex flex-col hover:-translate-y-2 transition-all duration-500">
                   <div className="relative aspect-square sm:h-56 overflow-hidden">
                   <VerifiedImage
                     src={getPrimaryVerifiedImage(place)}
@@ -373,17 +380,22 @@ function FeaturedStays() {
                     <span className="text-[11px] font-black text-[#1A1612]">{place.avgRating ? place.avgRating.toFixed(1) : 'NEW'}</span>
                   </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-base font-black text-[#1A1612] leading-tight line-clamp-1">{place.name}</h3>
-                  <div className="flex items-center gap-1 text-gray-400 mt-2">
-                    <MapPin className="w-3 h-3 text-[#C9973B]" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{place.area || place.city}</span>
+                  <div className="p-6">
+                    <h3 className="text-base font-black text-[#1A1612] leading-tight line-clamp-1">{place.name}</h3>
+                    <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-1 text-gray-400">
+                            <MapPin className="w-3 h-3 text-[#C9973B]" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">{place.area || place.city}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-[#C9973B] tracking-widest bg-[#C9973B]/5 px-2 py-0.5 rounded-full">
+                            {formatPrice(450, "ETB")}+
+                        </span>
+                    </div>
                   </div>
-                </div>
               </Link>
             ))}
       </div>
-    </div>
+    </PageSection>
   );
 }
 
@@ -393,28 +405,11 @@ export default function HomePage() {
       <HeroSection />
       <TrustStrip />
       
-      <div className="space-y-16 pb-12 overflow-hidden">
+      <div className="space-y-6 pb-12 overflow-hidden">
         <JustLandedSection />
-        <WhatsHappeningSection />
         <ThisWeekSection />
+        <GemsInAddisSection />
         <FeaturedStays />
-        
-        {/* Experience Section (Simulated) */}
-        <div className="px-6">
-            <h3 className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.3em] px-2 mb-4">Discovery</h3>
-            <div className="bg-[#1A1612] rounded-[3.5rem] p-10 text-center space-y-6 relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=2073&auto=format&fit=crop')] opacity-10 bg-cover bg-center grayscale" />
-                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter relative z-10 leading-tight">
-                    Immersion Mode <br/> <span className="text-[#C9973B]">Wildlife & Flora</span>
-                </h2>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-[0.2em] relative z-10 max-w-[200px] mx-auto leading-relaxed">
-                    Identify Ethiopia's unique nature with your camera.
-                </p>
-                <Link href="/identify" className="inline-block bg-[#C9973B] text-[#1A1612] px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.25em] relative z-10 shadow-2xl shadow-[#C9973B]/20 active:scale-95 transition-all">
-                    Open Camera
-                </Link>
-            </div>
-        </div>
       </div>
 
       <BottomNav />
