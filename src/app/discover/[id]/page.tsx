@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { MapPin, ArrowLeft, Share2, Heart, ExternalLink, User } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 async function getPost(id: string) {
   return await (prisma as any).discoveryPost.findUnique({
     where: { id },

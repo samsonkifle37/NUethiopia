@@ -3,9 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
 import { getSession } from "@/lib/auth";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+export const dynamic = "force-dynamic";
+
+// Create client lazily to avoid build-time errors if env vars are missing
+function getSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Supabase environment variables are missing");
+  }
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
 
 export async function POST(request: Request) {
   try {
@@ -19,6 +27,8 @@ export async function POST(request: Request) {
     if (!image || !title || !location) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    const supabase = getSupabase();
 
     // 1. Upload to Supabase Storage
     const buffer = Buffer.from(await image.arrayBuffer());
@@ -42,7 +52,6 @@ export async function POST(request: Request) {
     const session = await getSession();
     const userId = session?.user?.id || "guest-user";
 
-    // Use Prisma client with potentially correct model name
     const post = await (prisma as any).discoveryPost.create({
       data: {
         userId,
