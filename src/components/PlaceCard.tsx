@@ -92,7 +92,7 @@ export function PlaceCard({
                         </span>
                     )}
 
-                    {hasRealPhotos && heroImage && !heroImage.includes('unsplash.com') && !heroImage.includes('/fallbacks/') && (
+                    {hasRealPhotos && heroImage && !heroImage.includes('/fallbacks/') && (
                         <span className="bg-emerald-500/90 text-white text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full backdrop-blur-sm w-fit flex items-center gap-1 shadow-md border border-white/20">
                             <span className="text-[10px]">📷</span> Real Photos
                         </span>

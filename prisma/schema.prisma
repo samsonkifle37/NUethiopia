@@ -42,6 +42,18 @@ model User {
   
   // Discovery Posts (UGC)
   discoveryPosts      DiscoveryPost[]
+  notificationPreferences NotificationPreference?
+}
+
+model NotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  travel    Boolean  @default(true)
+  news      Boolean  @default(false)
+  bookings  Boolean  @default(true)
+  promos    Boolean  @default(false)
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {

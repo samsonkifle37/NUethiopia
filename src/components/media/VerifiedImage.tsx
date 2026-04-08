@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -47,16 +47,17 @@ export function VerifiedImage({
     }
 
     const isDbFallback = safeSrc?.includes('/fallbacks/') || false;
-    const hasValidSrc = safeSrc && safeSrc.trim() !== "" && !safeSrc.includes("unsplash.com") && !isDbFallback;
+    const hasValidSrc = safeSrc && safeSrc.trim() !== "" && !isDbFallback; // Allowed all sources including unsplash
     const shouldShowFallback = imgError || !hasValidSrc || isDbFallback;
     const isExplicitRepresentative = isRepresentative || shouldShowFallback;
     
     const resolvedFallback = isDbFallback ? (safeSrc as string) : (fallbackSrc || getFallbackPath(entityType));
 
-    // Use proxy only for supabase to bypass ORB/hotlinking
+    // Use proxy only for external images that might block hotlinking
+    // Bypassing proxy for unsplash since they handle their own optimization
     const finalSrc = shouldShowFallback
         ? resolvedFallback
-        : (safeSrc?.includes("supabase.co") || safeSrc?.startsWith("/") || safeSrc?.includes("wikimedia.org") || safeSrc?.includes("googleusercontent.com")
+        : (safeSrc?.includes("supabase.co") || safeSrc?.includes("unsplash.com") || safeSrc?.startsWith("/") || safeSrc?.includes("wikimedia.org") || safeSrc?.includes("googleusercontent.com")
             ? safeSrc as string
             : `/api/image-proxy?url=${encodeURIComponent(safeSrc as string)}`);
 

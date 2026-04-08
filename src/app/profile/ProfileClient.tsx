@@ -16,6 +16,7 @@ import { useCalendar } from "@/contexts/CalendarContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { UnifiedPreferences } from "@/components/profile/UnifiedPreferences";
 import { BottomNav } from "@/components/BottomNav";
+import { OfflineStorage, OfflinePack } from "@/lib/offline";
 
 // ── Types ──────────────────────────────
 
@@ -77,7 +78,53 @@ function GemCard({ gem, onDelete }: { gem: DiscoveryPost; onDelete: (id: string)
 // ── Profile Sections ──────────────────────────────
 
 function NotificationsSection() {
-    const [enabled, setEnabled] = useState({ travel: true, news: false, bookings: true });
+    const { user } = useAuth();
+    const [enabled, setEnabled] = useState({ travel: true, news: false, bookings: true, promos: false });
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchPrefs = async () => {
+            if (!user) {
+                const local = localStorage.getItem("nu_notifications");
+                if (local) setEnabled(JSON.parse(local));
+                return;
+            }
+            try {
+                const res = await fetch("/api/notifications/preferences");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.preferences) setEnabled(data.preferences);
+                }
+            } catch (e) {
+                console.error("Preferences fetch error", e);
+            }
+        };
+        fetchPrefs();
+    }, [user]);
+
+    const togglePreference = async (id: string) => {
+        const newPrefs = { ...enabled, [id]: !enabled[id as keyof typeof enabled] };
+        setEnabled(newPrefs);
+        
+        if (!user) {
+            localStorage.setItem("nu_notifications", JSON.stringify(newPrefs));
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await fetch("/api/notifications/preferences", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newPrefs)
+            });
+        } catch (e) {
+            console.error("Preferences update error", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
             <SectionHeader title="Notifications" desc="Stay updated in real-time" icon={Bell} colorClass="bg-blue-50 text-blue-500" />
@@ -85,12 +132,14 @@ function NotificationsSection() {
                 {[
                     { id: 'travel', label: 'Travel Alerts', desc: 'Safety and weather updates', icon: ShieldAlert },
                     { id: 'news', label: 'New Discoveries', desc: 'When we add new gems to NU', icon: Sparkles },
-                    { id: 'bookings', label: 'Booking Updates', desc: 'Confirmation and host messages', icon: Mail }
+                    { id: 'bookings', label: 'Booking Updates', desc: 'Confirmation and host messages', icon: Mail },
+                    { id: 'promos', label: 'Promotions', desc: 'Exclusive deals and partnerships', icon: Sparkles }
                 ].map((item) => (
                     <button 
                         key={item.id}
-                        onClick={() => setEnabled({...enabled, [item.id]: !enabled[item.id as keyof typeof enabled]})}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all"
+                        disabled={loading}
+                        onClick={() => togglePreference(item.id)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all disabled:opacity-50"
                     >
                         <div className="flex items-center gap-3 text-left">
                             <item.icon className="w-4 h-4 text-gray-400" />
@@ -110,22 +159,110 @@ function NotificationsSection() {
 }
 
 function OfflineSection() {
+    const [downloading, setDownloading] = useState(false);
+    const [packs, setPacks] = useState<OfflinePack[]>([]);
+    const [storageInfo, setStorageInfo] = useState({ used: "0.0", total: "500" });
+
+    const refreshPacks = async () => {
+        try {
+            const list = await OfflineStorage.listPacks();
+            setPacks(list);
+            const totalSize = list.reduce((acc, p) => acc + (p.data?.sizeBytes || 0), 0);
+            setStorageInfo({ used: (totalSize / (1024 * 1024)).toFixed(1), total: "500" });
+        } catch (e) {
+            console.error("Offline refresh error", e);
+        }
+    };
+
+    useEffect(() => {
+        refreshPacks();
+    }, []);
+
+    const handleDownload = async () => {
+        setDownloading(true);
+        try {
+            // Mock fetching essential data for "Addis Ababa Master Pack"
+            // In real app, this would hit /api/offline/pack
+            await new Promise(r => setTimeout(r, 2000)); 
+            
+            const addisPack: OfflinePack = {
+                id: "addis-master",
+                name: "Addis Ababa Master Pack",
+                description: "Essential emergency info, top 50 places, and city map for offline use.",
+                size: "42.5 MB",
+                downloadedAt: new Date(),
+                data: { 
+                    sizeBytes: 42.5 * 1024 * 1024,
+                    places: [], // would be real data
+                    emergency: { phone: "911", embassy: "011..." }
+                }
+            };
+
+            await OfflineStorage.savePack(addisPack);
+            await refreshPacks();
+        } catch (e) {
+            alert("Download failed. Please check your connection.");
+        } finally {
+            setDownloading(false);
+        }
+    };
+
+    const removePack = async (id: string) => {
+        if (confirm("Remove offline data?")) {
+            await OfflineStorage.deletePack(id);
+            await refreshPacks();
+        }
+    };
+
     return (
         <div className="bg-[#1A1612] rounded-[2.5rem] p-6 shadow-xl border border-[#C9973B]/20 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <SectionHeader title="Offline Mode" desc="Travel without connection" icon={HardDrive} colorClass="bg-[#C9973B] text-[#1A1612]" />
+            
             <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-xs font-black text-white">Storage Used</p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">0.0 MB / 500 MB</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{storageInfo.used} MB / {storageInfo.total} MB</p>
                     </div>
                 </div>
                 <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div className="w-0 h-full bg-[#C9973B]" />
+                    <div 
+                        className="h-full bg-[#C9973B] transition-all duration-500" 
+                        style={{ width: `${(parseFloat(storageInfo.used)/parseFloat(storageInfo.total))*100}%` }}
+                    />
                 </div>
             </div>
-            <button className="w-full py-4 bg-[#C9973B] text-[#1A1612] text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-lg shadow-[#C9973B]/10 hover:bg-white transition-all">
-                Download Destination Map
+
+            <div className="space-y-2">
+                {packs.map(pack => (
+                    <div key={pack.id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5">
+                        <div>
+                            <p className="text-[10px] font-black text-white uppercase">{pack.name}</p>
+                            <p className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">{pack.size} • Downloaded {new Date(pack.downloadedAt).toLocaleDateString()}</p>
+                        </div>
+                        <button onClick={() => removePack(pack.id)} className="text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-colors">
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            <button 
+                onClick={handleDownload}
+                disabled={downloading || packs.some(p => p.id === 'addis-master')}
+                className="w-full py-4 bg-[#C9973B] text-[#1A1612] text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-lg shadow-[#C9973B]/10 hover:bg-white transition-all disabled:opacity-50 disabled:bg-gray-800 disabled:text-gray-500 flex items-center justify-center gap-2"
+            >
+                {downloading ? (
+                    <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> DOWNLOADING...
+                    </>
+                ) : packs.some(p => p.id === 'addis-master') ? (
+                    <>
+                        <Check className="w-4 h-4" /> ADDIS PACK READY
+                    </>
+                ) : (
+                    "Download Destination Map"
+                )}
             </button>
         </div>
     );
@@ -137,7 +274,7 @@ function SupportSection() {
             <SectionHeader title="Support" desc="We're here to help" icon={HelpCircle} colorClass="bg-purple-50 text-purple-500" />
             <div className="grid grid-cols-1 gap-2">
                 <button 
-                  onClick={() => window.location.href="mailto:support@nuethiopia.app"}
+                  onClick={() => window.location.href="mailto:nuethiopia2026@gmail.com?subject=NU Support Request"}
                   className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all border border-gray-100"
                 >
                     <div className="flex items-center gap-3">
@@ -290,7 +427,7 @@ export function ProfileClient() {
                 <div className="relative z-10 flex items-center justify-between">
                     <div>
                         <p className="text-[#C9973B] text-[10px] font-black uppercase tracking-[0.4em] mb-2">{user ? "Active Explorer" : "Guest Mode"}</p>
-                        <h1 className="text-3xl font-black text-white tracking-tighter uppercase italic leading-none">{user ? user.name : "Ahlan Travel"}</h1>
+                        <h1 className="text-3xl font-black text-white tracking-tighter uppercase italic leading-none">{user ? user.name : "My Profile"}</h1>
                         {user && <p className="text-white/40 text-xs font-semibold mt-1">{user.email}</p>}
                     </div>
                     {user ? (
@@ -368,22 +505,48 @@ export function ProfileClient() {
 
                 {activeTab === 'account' && (
                     <div className="space-y-6 mb-8">
+                        {!user ? (
+                             <div className="bg-[#C9973B]/5 p-8 rounded-[2.5rem] border border-[#C9973B]/20 text-center space-y-4">
+                                <p className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.3em]">Unlock Account Features</p>
+                                <p className="text-xs text-gray-800 font-medium italic">Sign in to sync your data across devices, save listings, and see your trip history.</p>
+                                <div className="flex flex-col gap-3">
+                                    <Link href="/auth?callbackUrl=/profile" className="w-full bg-[#1A1612] text-[#C9973B] py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl text-center">
+                                        Sign In
+                                    </Link>
+                                    <Link href="/auth?callbackUrl=/profile&mode=register" className="w-full bg-white text-[#1A1612] border border-gray-200 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-center">
+                                        Create Account
+                                    </Link>
+                                </div>
+                             </div>
+                        ) : null}
+
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 space-y-6">
                             <SectionHeader title="Account Details" desc="Manage your personal data" icon={User} colorClass="bg-gray-50 text-gray-900" />
-                            <div className="space-y-3">
-                                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Registered Email</label>
-                                    <p className="text-sm font-bold text-gray-900">{user?.email || "Guest User"}</p>
+                            {user ? (
+                                <div className="space-y-3">
+                                    <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Registered Email</label>
+                                        <p className="text-sm font-bold text-gray-900">{user.email}</p>
+                                    </div>
+                                    <Link href="/profile/edit" className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 hover:border-[#C9973B]/30 transition-all group">
+                                        <span className="text-xs font-black text-gray-900 group-hover:text-[#C9973B]">Update Full Profile</span>
+                                        <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-[#C9973B]" />
+                                    </Link>
+                                    <Link href="/itineraries" className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 hover:border-[#C9973B]/30 transition-all group">
+                                        <span className="text-xs font-black text-gray-900 group-hover:text-[#C9973B]">My Detailed Itineraries</span>
+                                        <Map className="w-4 h-4 text-gray-300 group-hover:text-[#C9973B]" />
+                                    </Link>
                                 </div>
-                                <Link href="/profile/edit" className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 hover:border-[#C9973B]/30 transition-all group">
-                                    <span className="text-xs font-black text-gray-900 group-hover:text-[#C9973B]">Update Full Profile</span>
-                                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-[#C9973B]" />
-                                </Link>
-                                <Link href="/itineraries" className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 hover:border-[#C9973B]/30 transition-all group">
-                                    <span className="text-xs font-black text-gray-900 group-hover:text-[#C9973B]">My Detailed Itineraries</span>
-                                    <Map className="w-4 h-4 text-gray-300 group-hover:text-[#C9973B]" />
-                                </Link>
-                            </div>
+                            ) : (
+                                <div className="p-10 text-center space-y-4 bg-gray-50/50 rounded-[2rem] border border-dashed border-gray-200">
+                                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mx-auto text-gray-300 shadow-sm">
+                                        <Lock className="w-6 h-6" />
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
+                                        Sign in to see and manage<br />your account details.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <SupportSection />
@@ -392,10 +555,13 @@ export function ProfileClient() {
                             <SectionHeader title="Compliance" desc="Legal & Privacy documentation" icon={Shield} colorClass="bg-slate-50 text-slate-500" />
                             <div className="grid grid-cols-2 gap-3">
                                 <Link href="/legal/privacy" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent">
-                                    <p className="text-[10px] font-black uppercase tracking-widest">Privacy Policy</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Privacy Policy</p>
                                 </Link>
                                 <Link href="/legal/terms" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent">
-                                    <p className="text-[10px] font-black uppercase tracking-widest">Legal Terms</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Legal Terms</p>
+                                </Link>
+                                <Link href="/legal/compliance" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent col-span-2">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Security & Compliance</p>
                                 </Link>
                             </div>
                         </div>
@@ -410,16 +576,6 @@ export function ProfileClient() {
                                     <span className="text-[11px] font-black uppercase tracking-[0.25em]">Terminate Account</span>
                                 </button>
                             </div>
-                        )}
-                        
-                        {!user && (
-                             <div className="bg-[#C9973B]/5 p-8 rounded-[2.5rem] border border-[#C9973B]/20 text-center space-y-4">
-                                <p className="text-[10px] font-black text-[#C9973B] uppercase tracking-[0.3em]">Unlock Account Features</p>
-                                <p className="text-xs text-gray-800 font-medium italic">Sign in to sync your data across devices, save listings, and see your trip history.</p>
-                                <Link href="/auth?callbackUrl=/profile" className="inline-flex bg-[#1A1612] text-[#C9973B] px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">
-                                    Sign In Globally
-                                </Link>
-                             </div>
                         )}
                     </div>
                 )}

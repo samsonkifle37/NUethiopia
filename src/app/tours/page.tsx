@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import { PlaceGrid } from "@/components/PlaceGrid";
 import { getPlacesServer } from "@/lib/data/places";
 import { translations, tr as translate } from "@/lib/i18n";

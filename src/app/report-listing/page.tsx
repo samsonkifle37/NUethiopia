@@ -8,14 +8,32 @@ export default function ReportListingPage() {
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [listingName, setListingName] = useState("");
+    const [issueType, setIssueType] = useState("");
+    const [details, setDetails] = useState("");
+    const [reporterEmail, setReporterEmail] = useState("");
+    const [error, setError] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setLoading(false);
+        setError("");
+
+        try {
+            const res = await fetch("/api/reports", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ listingName, issueType, details, reporterEmail }),
+            });
+
+            if (!res.ok) throw new Error("Failed to submit report");
+
             setSubmitted(true);
-        }, 1500);
+        } catch (err: any) {
+            setError(err.message || "Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (submitted) {
@@ -64,6 +82,8 @@ export default function ReportListingPage() {
                                 required
                                 type="text" 
                                 placeholder="Name of the Hotel, Restaurant, or Tour"
+                                value={listingName}
+                                onChange={(e) => setListingName(e.target.value)}
                                 className="w-full p-5 bg-gray-50 rounded-2xl border border-transparent focus:border-[#C9973B]/20 text-sm font-bold focus:outline-none transition-all"
                             />
                         </div>
@@ -72,9 +92,11 @@ export default function ReportListingPage() {
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">What is the issue?</label>
                             <select 
                                 required
-                                className="w-full p-5 bg-gray-50 rounded-2xl border border-transparent focus:border-[#C9973B]/20 text-sm font-bold focus:outline-none appearance-none cursor-pointer"
+                                value={issueType}
+                                onChange={(e) => setIssueType(e.target.value)}
+                                className="w-full p-5 bg-gray-50 rounded-2xl border border-transparent focus:border-[#C9973B]/20 text-sm font-bold focus:outline-none appearance-none cursor-pointer text-gray-900"
                             >
-                                <option value="">Select an issue type</option>
+                                <option value="" className="text-gray-400">Select an issue type</option>
                                 <option value="closed">Permanently Closed</option>
                                 <option value="wrong_info">Incorrect Information (Price, Hours)</option>
                                 <option value="wrong_loc">Wrong Location / Map Marker</option>
@@ -90,10 +112,29 @@ export default function ReportListingPage() {
                                 required
                                 rows={4}
                                 placeholder="Describe exactly what needs to be fixed..."
-                                className="w-full p-5 bg-gray-50 rounded-2xl border border-transparent focus:border-[#C9973B]/20 text-sm font-bold focus:outline-none transition-all resize-none"
+                                value={details}
+                                onChange={(e) => setDetails(e.target.value)}
+                                className="w-full p-5 bg-gray-50 rounded-2xl border border-transparent focus:border-[#C9973B]/20 text-sm font-bold focus:outline-none transition-all resize-none text-gray-900"
                             ></textarea>
                         </div>
+
+                        <div className="space-y-2 px-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Your Contact Email (Optional)</label>
+                            <input 
+                                type="email" 
+                                placeholder="For follow-up questions"
+                                value={reporterEmail}
+                                onChange={(e) => setReporterEmail(e.target.value)}
+                                className="w-full p-5 bg-gray-50 rounded-2xl border border-transparent focus:border-[#C9973B]/20 text-sm font-bold focus:outline-none transition-all text-gray-900"
+                            />
+                        </div>
                     </div>
+
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[10px] font-black uppercase text-center">
+                            {error}
+                        </div>
+                    )}
 
                     <button 
                         type="submit" 

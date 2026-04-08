@@ -67,6 +67,9 @@ const nextConfig: NextConfig = {
       {
         pathname: "/fallbacks/**",
       },
+      {
+        pathname: "/uploads/**",
+      },
     ],
   },
   async redirects() {

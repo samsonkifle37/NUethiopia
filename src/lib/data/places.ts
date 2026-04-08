@@ -19,7 +19,6 @@ export async function getPlacesServer({
 
   if (types) {
     const rawTypes = types.split(",").map((t) => t.trim());
-    // Auto-expand types to handle both hotel/Hotel casing
     const typeList = [...rawTypes, ...rawTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase())];
     
     if (typeList.includes("must-see")) {
@@ -64,52 +63,64 @@ export async function getPlacesServer({
     ];
   }
 
-  const [places, total] = await Promise.all([
-    prisma.place.findMany({
-      where,
-      include: {
-        images: {
-          orderBy: { priority: "asc" },
-          take: 3,
+  try {
+    const [places, total] = await Promise.all([
+      prisma.place.findMany({
+        where,
+        include: {
+          images: {
+            orderBy: { priority: "asc" },
+            take: 3,
+          },
+          _count: { select: { reviews: true, favorites: true } },
         },
-        _count: { select: { reviews: true, favorites: true } },
-      },
-      orderBy: [
-        { ownerVerified: "desc" },
-        { featured: "desc" },
-        { verificationScore: "desc" },
-        { createdAt: "desc" }
-      ],
-      take: limit,
-      skip: offset,
-    }),
-    prisma.place.count({ where }),
-  ]);
+        orderBy: [
+          { reviewCount: "desc" },
+          { verificationLevel: "desc" },
+          { ownerVerified: "desc" },
+          { featured: "desc" },
+          { verificationScore: "desc" },
+          { createdAt: "desc" }
+        ],
+        take: limit,
+        skip: offset,
+      }),
+      prisma.place.count({ where }),
+    ]);
 
-  const audits = await prisma.imageAudit.findMany({
-    where: { entityId: { in: places.map((p) => p.id) } },
-    select: { entityId: true, status: true }
-  });
-  const auditMap = new Map(audits.map((a: any) => [a.entityId, a.status]));
+    const audits = await prisma.imageAudit.findMany({
+      where: { entityId: { in: places.map((p) => p.id) } },
+      select: { entityId: true, status: true }
+    });
+    const auditMap = new Map(audits.map((a: any) => [a.entityId, a.status]));
 
-  const placesWithExtras = await Promise.all(
-    places.map(async (place) => {
-      const agg = await prisma.review.aggregate({
-        where: { placeId: place.id },
-        _avg: { rating: true },
-      });
-      return {
-        ...place,
-        avgRating: agg._avg.rating || null,
-        auditStatus: auditMap.get(place.id) || null
-      };
-    })
-  );
+    const placesWithExtras = await Promise.all(
+      places.map(async (place) => {
+        const agg = await prisma.review.aggregate({
+          where: { placeId: place.id },
+          _avg: { rating: true },
+        });
+        return {
+          ...place,
+          avgRating: agg._avg.rating || null,
+          auditStatus: auditMap.get(place.id) || null
+        };
+      })
+    );
 
-  return {
-    places: JSON.parse(JSON.stringify(placesWithExtras)), // Ensure serialization
-    total,
-    limit,
-    offset
-  };
+    return {
+      places: JSON.parse(JSON.stringify(placesWithExtras)),
+      total,
+      limit,
+      offset
+    };
+  } catch (error) {
+    console.error("getPlacesServer failed:", error);
+    return {
+      places: [],
+      total: 0,
+      limit,
+      offset
+    };
+  }
 }

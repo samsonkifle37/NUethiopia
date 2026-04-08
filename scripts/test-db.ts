@@ -4,7 +4,7 @@ async function test() {
     const prisma = new PrismaClient({
         datasources: {
             db: {
-                url: process.env.DATABASE_URL
+                url: process.env.DIRECT_URL
             }
         }
     });

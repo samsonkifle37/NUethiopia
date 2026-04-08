@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, useSearchParams } from "next/navigation";
-import { User, Mail, Lock, Loader2, LogIn, Sparkles, X, ArrowLeft, Home, Building2, CheckCircle } from "lucide-react";
+import { User, Mail, Lock, Loader2, LogIn, Sparkles, X, ArrowLeft, Home, Building2, CheckCircle, Send } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { supabase } from "@/lib/supabaseClient";
 
 import { Suspense } from "react";
 
@@ -54,6 +55,67 @@ function AuthPageContent() {
         } else {
              // Successful Login
              router.push(callbackUrl);
+        }
+    };
+
+    const handleMagicLink = async () => {
+        if (!email) {
+            setError("Please enter your email first.");
+            return;
+        }
+        setLoading(true);
+        setError("");
+        setSuccessMsg("");
+
+        if (!supabase) {
+            setError("Magic Link feature is currently unavailable. Please sign in with your password instead.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/api/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+                },
+            });
+
+            if (error) throw error;
+            setSuccessMsg("Magic link sent! Check your email inbox to sign in.");
+        } catch (err: any) {
+            setError(err.message || "Failed to send magic link.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            setError("Please enter your email to receive a reset link.");
+            return;
+        }
+        setLoading(true);
+        setError("");
+        setSuccessMsg("");
+
+        if (!supabase) {
+            setError("Password Reset feature is currently unavailable. Please contact support at nuethiopia2026@gmail.com.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/auth/reset-password`,
+            });
+
+            if (error) throw error;
+            setSuccessMsg("Password reset link sent! Please check your email.");
+        } catch (err: any) {
+            setError(err.message || "Failed to send reset link.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -169,7 +231,7 @@ function AuthPageContent() {
                                 <div className="text-right">
                                     <button 
                                         type="button"
-                                        onClick={() => setError("Password reset feature is coming soon. Please contact administrator for assistance.")}
+                                        onClick={handleForgotPassword}
                                         className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D4AF37] transition-colors"
                                     >
                                         Forgot password?
@@ -212,8 +274,9 @@ function AuthPageContent() {
                                 {mode === "login" && (
                                     <button
                                         type="button"
-                                        onClick={() => setError("Magic links require an active email provider. This feature is coming soon.")}
-                                        className="w-full bg-white text-gray-600 border border-gray-200 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+                                        onClick={handleMagicLink}
+                                        disabled={loading}
+                                        className="w-full bg-white text-gray-600 border border-gray-200 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors disabled:opacity-50"
                                     >
                                         <Mail className="w-4 h-4" /> Sign in with Magic Link
                                     </button>

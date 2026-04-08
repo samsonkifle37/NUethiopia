@@ -1,0 +1,550 @@
+{
+  "hotels": [
+    {
+      "name": "Sheraton Addis, a Luxury Collection Hotel",
+      "phones": [
+        "+251 11 517 0000"
+      ],
+      "emails": [
+        "reservations@sheraton.com"
+      ],
+      "websites": [
+        "www.sheraton.com/addis"
+      ],
+      "address": "",
+      "category": "Five-Star & Luxury Hotels",
+      "type": "hotel",
+      "subcategory": "Luxury 5-star"
+    },
+    {
+      "name": "Hilton Addis Ababa",
+      "phones": [
+        "+251 11 517 0000"
+      ],
+      "emails": [
+        "reservations.addisababa@hilton.com"
+      ],
+      "websites": [
+        "www.hilton.com"
+      ],
+      "address": "",
+      "category": "Five-Star & Luxury Hotels",
+      "type": "hotel",
+      "subcategory": "5-star International Chain"
+    },
+    {
+      "name": "Hyatt Regency Addis Ababa",
+      "phones": [],
+      "emails": [],
+      "websites": [
+        "www.hyatt.com"
+      ],
+      "address": "",
+      "category": "Five-Star & Luxury Hotels",
+      "type": "hotel",
+      "subcategory": "5-star International Chain"
+    },
+    {
+      "name": "Ethiopian Skylight Hotel",
+      "phones": [
+        "+251 11 681 8181"
+      ],
+      "emails": [
+        "reservation@ethiopianskylighthotel.com"
+      ],
+      "websites": [
+        "www.ethiopianskylighthotel.com"
+      ],
+      "address": "",
+      "category": "Five-Star & Luxury Hotels",
+      "type": "hotel",
+      "subcategory": "5-star (Largest in Africa - 1,024 rooms)"
+    },
+    {
+      "name": "Radisson Blu Hotel Addis Ababa",
+      "phones": [],
+      "emails": [],
+      "websites": [
+        "www.radissonblu.com"
+      ],
+      "address": "",
+      "category": "Five-Star & Luxury Hotels",
+      "type": "hotel",
+      "subcategory": "5-star International Chain"
+    },
+    {
+      "name": "Inter Luxury Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Five-Star & Luxury Hotels",
+      "type": "hotel",
+      "subcategory": "Luxury 5-star"
+    },
+    {
+      "name": "Capital Hotel and Spa",
+      "phones": [
+        "+251-11-6-672100, +251-11-6-192000"
+      ],
+      "emails": [
+        "reservation@capitalhotelandspa.com"
+      ],
+      "websites": [
+        "www.capitalhotelandspa.com"
+      ],
+      "address": "",
+      "category": "Four-Star Hotels",
+      "type": "hotel",
+      "subcategory": "4-star"
+    },
+    {
+      "name": "Marriott Executive Apartments Addis Ababa",
+      "phones": [
+        "Available through Marriott website"
+      ],
+      "emails": [
+        "Available through Marriott website"
+      ],
+      "websites": [
+        "www.marriott.com"
+      ],
+      "address": "",
+      "category": "Four-Star Hotels",
+      "type": "hotel",
+      "subcategory": "4-star Serviced Apartments"
+    },
+    {
+      "name": "Golden Tulip Addis Ababa Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Four-Star Hotels",
+      "type": "hotel",
+      "subcategory": "4-star"
+    },
+    {
+      "name": "Elilly International Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Four-Star Hotels",
+      "type": "hotel",
+      "subcategory": "4-star"
+    },
+    {
+      "name": "Getfam Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Four-Star Hotels",
+      "type": "hotel",
+      "subcategory": "4-star"
+    },
+    {
+      "name": "Ramada by Wyndham Addis Ababa",
+      "phones": [
+        "Available through Wyndham website"
+      ],
+      "emails": [
+        "Available through Wyndham website"
+      ],
+      "websites": [
+        "www.wyndham.com"
+      ],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Best Western Plus Pearl Addis",
+      "phones": [
+        "Available through Best Western website"
+      ],
+      "emails": [],
+      "websites": [
+        "www.bestwestern.com"
+      ],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Best Western Plus Addis Ababa",
+      "phones": [
+        "Available through Best Western website"
+      ],
+      "emails": [],
+      "websites": [
+        "www.bestwestern.com"
+      ],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Saro Maria Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Dreamliner Hotel",
+      "phones": [
+        "+251-11-4 67 40 00"
+      ],
+      "emails": [
+        "reservation@dreamlinerhotel.com"
+      ],
+      "websites": [
+        "www.dreamlinerhotel.com"
+      ],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Ghion Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star Historic Hotel (1951)"
+    },
+    {
+      "name": "Momona Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star (Near Airport)"
+    },
+    {
+      "name": "Monarch Hotel Addis",
+      "phones": [
+        "+251-11-667-2480"
+      ],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Tolip Olympia Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Harmony Hotel Addis Ababa",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Swiss Inn Nexus Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Addissinia Hotel",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star Budget-Friendly"
+    },
+    {
+      "name": "Hotel Lobelia",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Panorama Hotel Addis Ababa",
+      "phones": [
+        "+251-11-661-6070"
+      ],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Jupiter International Hotel (Bole)",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Jupiter International Hotel (Kazanchis)",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Three-Star & Mid-Range Hotels",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Caravan Hotel Addis Ababa",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Two-Star & Budget Hotels",
+      "type": "hotel",
+      "subcategory": "2-star Budget"
+    },
+    {
+      "name": "Crown Hotel Addis Ababa",
+      "phones": [
+        "+251-11-5510149, +251-11-5517400"
+      ],
+      "emails": [],
+      "websites": [
+        "www.ethiopiahotels.net"
+      ],
+      "address": "",
+      "category": "Two-Star & Budget Hotels",
+      "type": "hotel",
+      "subcategory": "Tourist Class"
+    },
+    {
+      "name": "Kaleb Hotel",
+      "phones": [
+        "+251-11-662-2200"
+      ],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Additional Hotels (3-Star)",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "King's Hotel",
+      "phones": [
+        "+251-11-371-1300"
+      ],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Additional Hotels (3-Star)",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Sidra Hotel",
+      "phones": [
+        "+251-11-661-7777"
+      ],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Additional Hotels (3-Star)",
+      "type": "hotel",
+      "subcategory": "3-star"
+    }
+  ],
+  "tours": [
+    {
+      "name": "Churchill Hotel",
+      "phones": [
+        "+251-11-111-1212"
+      ],
+      "emails": [
+        "churchillhotel@ethionet.et"
+      ],
+      "websites": [],
+      "address": "",
+      "category": "Additional Hotels (3-Star)",
+      "type": "hotel",
+      "subcategory": "3-star"
+    },
+    {
+      "name": "Inside Ethiopia Tours",
+      "phones": [
+        "+251 116 721 228 (Office)"
+      ],
+      "emails": [
+        "info@insideethiopiatours.com"
+      ],
+      "websites": [
+        "www.insideethiopiatours.com"
+      ],
+      "address": "Kirkos Subcity, Woreda 3, Kazanchis Building 1289, Office 02/14 (In front of UNECA building)",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Local travel agency with cultural tours and personalized itineraries"
+    },
+    {
+      "name": "Ghion Travel Services (GTT)",
+      "phones": [
+        "+251-11-5505566, +251-11-5505657"
+      ],
+      "emails": [
+        "info@ghiontour.com"
+      ],
+      "websites": [
+        "www.ghiontour.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Well-organized tours, cultural and adventure travel"
+    },
+    {
+      "name": "Aman Ethiopia Tours",
+      "phones": [],
+      "emails": [],
+      "websites": [
+        "www.amanethiopiatours.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Online booking platform, detailed tour information"
+    },
+    {
+      "name": "Absolute Ethiopia",
+      "phones": [],
+      "emails": [
+        "Available through contact form"
+      ],
+      "websites": [
+        "www.absoluteethiopia.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Bespoke and group tours with expert guides"
+    },
+    {
+      "name": "ETT (Ethio Travel and Tours)",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Pioneer operator offering cultural tours, trekking expeditions, hotel bookings, domestic and regional flights"
+    },
+    {
+      "name": "Rotate Ethiopian Tours",
+      "phones": [],
+      "emails": [],
+      "websites": [
+        "www.rotateethiopiatours.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Budget to luxury tours, historical tours, tribal tours, wildlife safaris, Danakil Depression tours"
+    },
+    {
+      "name": "His-Cul Tours Ethiopia",
+      "phones": [
+        "+251-911-524616"
+      ],
+      "emails": [
+        "Contact@hiscultours.com, Info@hiscultours.com"
+      ],
+      "websites": [
+        "www.hiscultours.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Comprehensive Ethiopia tours and packages"
+    },
+    {
+      "name": "Gelila Ethiopia Tours",
+      "phones": [],
+      "emails": [],
+      "websites": [],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Northern Circuit and Omo Valley tribal tours, 24/7 ground support"
+    },
+    {
+      "name": "Ethiopian Travel Agency",
+      "phones": [],
+      "emails": [],
+      "websites": [
+        "www.ethiopiantravelagency.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "General travel and tour services"
+    },
+    {
+      "name": "Yama Tours Ethiopia",
+      "phones": [],
+      "emails": [],
+      "websites": [
+        "www.yamatoursethiopia.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Ethiopia travel packages and unique adventures"
+    },
+    {
+      "name": "Alpha Tour Travel Agency Ethiopia",
+      "phones": [],
+      "emails": [],
+      "websites": [
+        "www.alphatourtravel.com"
+      ],
+      "address": "",
+      "category": "Major Tour Operators",
+      "type": "tour",
+      "description": "Ethiopian travel services"
+    }
+  ]
+}
