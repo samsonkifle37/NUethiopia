@@ -15,7 +15,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCalendar } from "@/contexts/CalendarContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { UnifiedPreferences } from "@/components/profile/UnifiedPreferences";
-import { BottomNav } from "@/components/BottomNav";
 import { OfflineStorage, OfflinePack } from "@/lib/offline";
 
 // ── Types ──────────────────────────────
@@ -517,6 +516,9 @@ export function ProfileClient() {
                                         Create Account
                                     </Link>
                                 </div>
+                                <p className="text-[9px] text-gray-400 font-medium uppercase tracking-widest pt-2">
+                                    Magic link & forgot password available on sign in page
+                                </p>
                              </div>
                         ) : null}
 
@@ -533,8 +535,12 @@ export function ProfileClient() {
                                         <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-[#C9973B]" />
                                     </Link>
                                     <Link href="/itineraries" className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 hover:border-[#C9973B]/30 transition-all group">
-                                        <span className="text-xs font-black text-gray-900 group-hover:text-[#C9973B]">My Detailed Itineraries</span>
+                                        <span className="text-xs font-black text-gray-900 group-hover:text-[#C9973B]">My Itineraries</span>
                                         <Map className="w-4 h-4 text-gray-300 group-hover:text-[#C9973B]" />
+                                    </Link>
+                                    <Link href="/favorites" className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 hover:border-[#C9973B]/30 transition-all group">
+                                        <span className="text-xs font-black text-gray-900 group-hover:text-[#C9973B]">Saved Places</span>
+                                        <Heart className="w-4 h-4 text-gray-300 group-hover:text-[#C9973B]" />
                                     </Link>
                                 </div>
                             ) : (
@@ -552,17 +558,36 @@ export function ProfileClient() {
                         <SupportSection />
 
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 space-y-6">
-                            <SectionHeader title="Compliance" desc="Legal & Privacy documentation" icon={Shield} colorClass="bg-slate-50 text-slate-500" />
+                            <SectionHeader title="Legal & Compliance" desc="Privacy, terms & safety" icon={Shield} colorClass="bg-slate-50 text-slate-500" />
                             <div className="grid grid-cols-2 gap-3">
-                                <Link href="/legal/privacy" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent">
+                                <Link href="/legal/privacy" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                                    <FileText className="w-4 h-4 mx-auto mb-2 text-gray-400" />
                                     <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Privacy Policy</p>
                                 </Link>
-                                <Link href="/legal/terms" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Legal Terms</p>
+                                <Link href="/legal/terms" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                                    <FileText className="w-4 h-4 mx-auto mb-2 text-gray-400" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Terms of Service</p>
                                 </Link>
-                                <Link href="/legal/compliance" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent col-span-2">
+                                <Link href="/legal/moderation" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                                    <ShieldAlert className="w-4 h-4 mx-auto mb-2 text-red-400" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Moderation & Reporting</p>
+                                </Link>
+                                <Link href="/legal/account-mgmt" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                                    <User className="w-4 h-4 mx-auto mb-2 text-gray-400" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Account Management</p>
+                                </Link>
+                                <Link href="/legal/compliance" className="p-5 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200 col-span-2">
+                                    <Shield className="w-4 h-4 mx-auto mb-2 text-gray-400" />
                                     <p className="text-[10px] font-black uppercase tracking-widest text-[#1A1612]">Security & Compliance</p>
                                 </Link>
+                            </div>
+                            <div className="pt-3 border-t border-gray-100">
+                                <button 
+                                    onClick={() => window.location.href="mailto:nuethiopia2026@gmail.com?subject=Legal Contact"}
+                                    className="w-full text-center text-[9px] text-gray-400 font-bold uppercase tracking-widest hover:text-[#C9973B] transition-colors py-2"
+                                >
+                                    Contact: nuethiopia2026@gmail.com
+                                </button>
                             </div>
                         </div>
 
@@ -580,8 +605,6 @@ export function ProfileClient() {
                     </div>
                 )}
             </div>
-
-            <BottomNav />
 
             {showDeleteModal && <DeleteAccountModal onClose={() => setShowDeleteModal(false)} />}
         </div>

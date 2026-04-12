@@ -6,10 +6,13 @@ export const metadata = { title: "Listing Foundry - Admin" };
 
 export default async function FoundryPage({ searchParams }: { searchParams: Promise<{ status?: string, city?: string }> }) {
     const resolvedParams = await searchParams;
-    const listings = await getIngestionListings({
-        status: resolvedParams.status as any,
-        city: resolvedParams.city
-    });
+    const [listings, metadata] = await Promise.all([
+        getIngestionListings({
+            status: resolvedParams.status as any,
+            city: resolvedParams.city
+        }),
+        import('./actions').then(m => m.getFoundryMetadata())
+    ]);
 
     return (
         <div className="space-y-10 animate-in fade-in duration-700 w-full">
@@ -33,7 +36,7 @@ export default async function FoundryPage({ searchParams }: { searchParams: Prom
             </div>
 
             {/* Foundry Content Container - Full Width */}
-            <FoundryClient initialListings={listings} />
+            <FoundryClient initialListings={listings} metadata={metadata} />
         </div>
     );
 }

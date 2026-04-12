@@ -11,7 +11,6 @@ import {
   Car, Wifi, Banknote, Compass, Navigation, ShieldCheck, Plus
 } from "lucide-react";
 import { useState } from "react";
-import { BottomNav } from "@/components/BottomNav";
 import { useCalendar } from "@/contexts/CalendarContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -237,7 +236,7 @@ function GemsInAddisSection() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 px-1">
                 {(posts || []).map((post: any) => (
-                    <Link key={post.id} href={`/discover/${post.id}`} className="relative aspect-[4/5] rounded-2xl overflow-hidden group shadow-sm bg-gray-100 border border-gray-50">
+                    <Link key={post.id} href="/tours#gems" className="relative aspect-[4/5] rounded-2xl overflow-hidden group shadow-sm bg-gray-100 border border-gray-50">
                         <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                         <div className="absolute bottom-3 left-3 right-3 text-left">
@@ -252,11 +251,11 @@ function GemsInAddisSection() {
                 
                 {/* Fallback mock if empty for visual demo */}
                 {(!posts || posts.length === 0) && [
-                    { id: '1', title: 'Sunset at Entoto', cat: 'VIEW', img: 'https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=2073&auto=format&fit=crop' },
-                    { id: '2', title: 'Best Buna in Bole', cat: 'COFFEE', img: 'https://images.unsplash.com/photo-1544413647-795175a95444?q=80&w=1974&auto=format&fit=crop' }
+                    { id: '1', title: 'Sunset at Entoto', cat: 'VIEW', img: 'https://images.unsplash.com/photo-1624314138470-5a2f24623f10?q=80&w=2070&auto=format&fit=crop' },
+                    { id: '2', title: 'Best Buna in Bole', cat: 'COFFEE', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2070&auto=format&fit=crop' }
                 ].slice(0, posts?.length || 2).map((mock) => (
-                    <Link key={mock.id} href="/discover" className="relative aspect-[4/5] rounded-2xl overflow-hidden group shadow-sm bg-gray-100 border border-gray-50">
-                        <img src={mock.img} alt={mock.title} className="w-full h-full object-cover opacity-80" />
+                    <Link key={mock.id} href="/tours#gems" className="relative aspect-[4/5] rounded-2xl overflow-hidden group shadow-sm bg-gray-100 border border-gray-50">
+                        <img src={mock.img} alt={mock.title} className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-700" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                         <div className="absolute bottom-3 left-3 right-3 text-left">
                             <p className="text-white text-[10px] font-black uppercase tracking-tight">{mock.title}</p>
@@ -399,6 +398,66 @@ function FeaturedStays() {
   );
 }
 
+function TopExperiences() {
+  const { tr } = useLanguage();
+  const { data, isLoading } = useQuery({
+    queryKey: ["home-experiences"],
+    queryFn: () => fetchPlaces("tour,tour_operator,guide,experience,restaurant,coffee,cafe,bar,club,nightlife", 4),
+  });
+
+  return (
+    <PageSection className="space-y-4">
+      <div className="flex justify-between items-end px-2">
+        <div>
+            <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em] mb-1">Tours & Dining</p>
+            <h2 className="text-2xl font-black tracking-tighter text-[#1A1612] italic uppercase">Top Experiences</h2>
+        </div>
+        <Link href="/tours" className="bg-gray-100 p-3 rounded-full hover:bg-orange-500 transition-all group">
+          <ArrowRight className="w-5 h-5 group-hover:text-white" />
+        </Link>
+      </div>
+
+      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 px-2">
+        {isLoading
+          ? [1, 2, 3].map((i) => (
+            <div key={i} className="shrink-0 w-64 h-80 bg-gray-100 rounded-2xl animate-pulse" />
+          ))
+          : data?.places?.map((place: PlaceData) => (
+              <Link key={place.id} href={`/place/${place.slug}`} className="shrink-0 w-72 bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-50 group flex flex-col hover:-translate-y-2 transition-all duration-500">
+                  <div className="relative aspect-square sm:h-56 overflow-hidden">
+                  <VerifiedImage
+                    src={getPrimaryVerifiedImage(place)}
+                    alt={place.name}
+                    className="w-full h-full group-hover:scale-110 transition-transform duration-1000 ease-out object-cover"
+                    entityType={place.type as any}
+                    showBadge={false}
+                  />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-orange-500/90 text-white text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      {place.type}
+                    </span>
+                  </div>
+                  {place.avgRating && (
+                    <div className="absolute top-4 right-4 bg-white/95 px-3 py-1.5 rounded-full flex items-center gap-1 shadow-xl">
+                      <Star className="w-3.5 h-3.5 text-[#C9973B] fill-[#C9973B]" />
+                      <span className="text-[11px] font-black text-[#1A1612]">{place.avgRating.toFixed(1)}</span>
+                    </div>
+                  )}
+                </div>
+                  <div className="p-6">
+                    <h3 className="text-base font-black text-[#1A1612] leading-tight line-clamp-1">{place.name}</h3>
+                    <div className="flex items-center gap-1 text-gray-400 mt-2">
+                        <MapPin className="w-3 h-3 text-orange-500" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{place.area || place.city}</span>
+                    </div>
+                  </div>
+              </Link>
+            ))}
+      </div>
+    </PageSection>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#FAFAF8] pb-32">
@@ -410,9 +469,9 @@ export default function HomePage() {
         <ThisWeekSection />
         <GemsInAddisSection />
         <FeaturedStays />
+        <TopExperiences />
       </div>
-
-      <BottomNav />
     </div>
   );
 }
+

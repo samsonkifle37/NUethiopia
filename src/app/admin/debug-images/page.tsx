@@ -8,6 +8,10 @@ import { CheckCircle, XCircle, ImageIcon, Search, RefreshCw, Send, Loader2 } fro
 
 export default function DebugImagesPage() {
     const [filter, setFilter] = useState("");
+    const [scoreFilter, setScoreFilter] = useState("all");
+    const [locationFilter, setLocationFilter] = useState("all");
+    const [categoryFilter, setCategoryFilter] = useState("all");
+    
     const [isSyncing, setIsSyncing] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
     const queryClient = useQueryClient();
@@ -67,9 +71,21 @@ export default function DebugImagesPage() {
         }
     };
 
-    const entities = data?.entities?.filter((e: any) =>
-        e.name.toLowerCase().includes(filter.toLowerCase())
-    ) || [];
+    const allLocations = Array.from(new Set(data?.entities?.map((e: any) => e.location).filter(Boolean))) as string[];
+    const allCategories = Array.from(new Set(data?.entities?.map((e: any) => e.type).filter(Boolean))) as string[];
+
+    const entities = data?.entities?.filter((e: any) => {
+        const matchesName = e.name.toLowerCase().includes(filter.toLowerCase());
+        const matchesLocation = locationFilter === "all" || e.location === locationFilter;
+        const matchesCategory = categoryFilter === "all" || e.type === categoryFilter;
+        
+        let matchesScore = true;
+        if (scoreFilter === "low") matchesScore = e.score < 50;
+        else if (scoreFilter === "medium") matchesScore = e.score >= 50 && e.score < 100;
+        else if (scoreFilter === "perfect") matchesScore = e.score === 100;
+        
+        return matchesName && matchesLocation && matchesCategory && matchesScore;
+    }) || [];
 
     return (
         <div className="space-y-10 animate-in fade-in duration-700 h-full">
@@ -83,12 +99,45 @@ export default function DebugImagesPage() {
                     <p className="text-gray-400 font-medium text-sm">Real-time audit of all platform assets.</p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {/* Kept bulk sync for system-wide refresh, but smaller */}
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Filtering Buttons */}
+                    <div className="flex items-center gap-2 bg-white p-1.5 rounded-[1.25rem] border border-gray-100 shadow-sm">
+                        <select 
+                            value={scoreFilter} 
+                            onChange={(e) => setScoreFilter(e.target.value)}
+                            className="bg-transparent text-[10px] font-black uppercase tracking-widest px-3 py-1.5 outline-none cursor-pointer border-r border-gray-100"
+                        >
+                            <option value="all">Content Score</option>
+                            <option value="low">Low (&lt;50%)</option>
+                            <option value="medium">Actionable (50-99%)</option>
+                            <option value="perfect">Perfect (100%)</option>
+                        </select>
+                        <select 
+                            value={locationFilter} 
+                            onChange={(e) => setLocationFilter(e.target.value)}
+                            className="bg-transparent text-[10px] font-black uppercase tracking-widest px-3 py-1.5 outline-none cursor-pointer border-r border-gray-100"
+                        >
+                            <option value="all">Location</option>
+                            {allLocations.map(loc => (
+                                <option key={loc} value={loc}>{loc}</option>
+                            ))}
+                        </select>
+                        <select 
+                            value={categoryFilter} 
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="bg-transparent text-[10px] font-black uppercase tracking-widest px-3 py-1.5 outline-none cursor-pointer"
+                        >
+                            <option value="all">Category</option>
+                            {allCategories.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     <button
                         onClick={handleSync}
                         disabled={isSyncing}
-                        className="p-3 bg-white border border-gray-100 shadow-sm rounded-2xl text-gray-500 hover:text-black transition-all hover:bg-gray-50 disabled:opacity-50"
+                        className="p-3.5 bg-white border border-gray-100 shadow-sm rounded-2xl text-gray-400 hover:text-[#1A1612] transition-all hover:bg-gray-50 disabled:opacity-50"
                         title="Master Sync"
                     >
                         {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
@@ -96,7 +145,7 @@ export default function DebugImagesPage() {
                     <button
                         onClick={handlePublish}
                         disabled={isPublishing}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#1A1612] text-white shadow-xl shadow-gray-200/50 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-[#1A1612] hover:bg-black transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-3.5 bg-[#1A1612] text-white shadow-xl shadow-gray-200/50 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-[#1A1612] hover:bg-black transition-all disabled:opacity-50"
                     >
                         {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         Publish All

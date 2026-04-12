@@ -4,38 +4,69 @@ import { PlaceGrid } from "@/components/PlaceGrid";
 import { getPlacesServer } from "@/lib/data/places";
 import { translations, tr as translate } from "@/lib/i18n";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Stays | NU Ethiopia",
   description: "Find the best hotels, guesthouses, and apartments in Ethiopia.",
 };
 
-export default async function StaysPage() {
-  // Current language default to "en" for SSR
+async function StaysContent() {
   const lang = "en";
   const tr = (section: keyof typeof translations["en"], key: string) => translate(lang, section, key);
 
-  const initialData = await getPlacesServer({
-    types: "hotel,guesthouse,apartment,resort",
-    limit: 18
-  });
+  let initialData;
+  try {
+    initialData = await getPlacesServer({
+      types: "hotel,guesthouse,apartment,resort",
+      limit: 18
+    });
+  } catch (error) {
+    console.error("Stays SSR data fetch failed:", error);
+    initialData = { places: [], total: 0, limit: 18, offset: 0 };
+  }
 
   return (
+    <PlaceGrid
+      title={tr("sections", "discoverStays")}
+      types="hotel,guesthouse,apartment,resort"
+      filterOptions={[
+        { value: "", label: tr("sections", "allStays") },
+        { value: "hotel", label: tr("sections", "hotels") },
+        { value: "guesthouse", label: tr("sections", "guesthouses") },
+        { value: "apartment", label: tr("sections", "apartments") },
+        { value: "resort", label: tr("sections", "resorts") },
+      ]}
+      searchPlaceholder={tr("sections", "staysSearch")}
+      accentColor="ethiopia-green"
+      initialData={initialData}
+    />
+  );
+}
+
+export default function StaysPage() {
+  return (
     <div className="min-h-screen bg-[#FAFAF8] pb-24">
-      <PlaceGrid
-        title={tr("sections", "discoverStays")}
-        types="hotel,guesthouse,apartment,resort"
-        filterOptions={[
-          { value: "", label: tr("sections", "allStays") },
-          { value: "hotel", label: tr("sections", "hotels") },
-          { value: "guesthouse", label: tr("sections", "guesthouses") },
-          { value: "apartment", label: tr("sections", "apartments") },
-          { value: "resort", label: tr("sections", "resorts") },
-        ]}
-        searchPlaceholder={tr("sections", "staysSearch")}
-        accentColor="ethiopia-green"
-        initialData={initialData}
-      />
+      <Suspense fallback={
+        <div className="space-y-6 pt-4 px-4 animate-pulse">
+          <div className="flex justify-between items-center px-1">
+            <div className="h-8 w-48 bg-gray-200 rounded-xl" />
+          </div>
+          <div className="h-12 bg-gray-200 rounded-2xl" />
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="h-8 w-24 bg-gray-200 rounded-xl shrink-0" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-gray-100 h-72 rounded-[2rem]" />
+            ))}
+          </div>
+        </div>
+      }>
+        <StaysContent />
+      </Suspense>
     </div>
   );
 }

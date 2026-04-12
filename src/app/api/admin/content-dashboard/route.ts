@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
             return {
                 name: p.name,
                 type: p.type,
+                location: p.city,
                 slug: p.slug,
                 id: p.id,
                 primaryImage: hasImage,

@@ -1,10 +1,11 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PlaceCard } from "./PlaceCard";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Check } from "lucide-react";
 import { getPrimaryVerifiedImage } from "@/lib/images";
 
 interface PlaceGridProps {
@@ -35,6 +36,7 @@ interface PlaceData {
     featured?: boolean;
     verificationScore?: number;
     _count?: { reviews: number; favorites: number };
+    isGem?: boolean;
 }
 
 interface PlacesResponse {
@@ -42,7 +44,47 @@ interface PlacesResponse {
     total: number;
 }
 
+type SortOption = "relevance" | "rating" | "name" | "newest";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+    { value: "relevance", label: "Most Relevant" },
+    { value: "rating", label: "Highest Rated" },
+    { value: "name", label: "A → Z" },
+    { value: "newest", label: "Newest" },
+];
+
 async function fetchPlaces(types: string, search: string, pageParam: number = 0, area: string = ""): Promise<PlacesResponse> {
+    if (types === "gems") {
+        const params = new URLSearchParams();
+        if (search) params.set("search", search);
+        params.set("limit", "18");
+        // /api/discovery doesn't support offset yet, but we'll normalize it anyway
+        const res = await fetch(`/api/discovery?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch gems");
+        const data = await res.json();
+        
+        // Normalize DiscoveryPost to PlaceData
+        const normalized = (data.posts || []).map((p: any) => ({
+            id: p.id,
+            slug: p.id,
+            name: p.title,
+            type: p.category,
+            city: "Addis Ababa",
+            area: p.user?.name || "Local Guide",
+            shortDescription: null,
+            avgRating: 5.0,
+            tags: ["GEM", "Community"],
+            images: [{ imageUrl: p.imageUrl }],
+            auditStatus: "ok",
+            isGem: true
+        }));
+
+        return {
+            places: normalized,
+            total: normalized.length
+        };
+    }
+
     const params = new URLSearchParams();
     if (types) params.set("type", types);
     if (search) params.set("search", search);
@@ -55,6 +97,24 @@ async function fetchPlaces(types: string, search: string, pageParam: number = 0,
     return res.json();
 }
 
+function sortPlaces(places: PlaceData[], sort: SortOption): PlaceData[] {
+    if (sort === "relevance") return places; // Server default ordering
+    const sorted = [...places];
+    switch (sort) {
+        case "rating":
+            sorted.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+            break;
+        case "name":
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+        case "newest":
+            // Keep original order which is by createdAt desc from server
+            sorted.reverse();
+            break;
+    }
+    return sorted;
+}
+
 export function PlaceGrid({
     title,
     types,
@@ -65,9 +125,38 @@ export function PlaceGrid({
     initialData
 }: PlaceGridProps) {
     const { tr } = useLanguage();
-    const [activeFilter, setActiveFilter] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [areaFilter, setAreaFilter] = useState("");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Restore state from URL params
+    const [activeFilter, setActiveFilter] = useState(searchParams.get("category") || "");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+    const [areaFilter, setAreaFilter] = useState(searchParams.get("area") || "");
+    const [sortBy, setSortBy] = useState<SortOption>((searchParams.get("sort") as SortOption) || "relevance");
+    const [showSortMenu, setShowSortMenu] = useState(false);
+
+    // Sync URL params when filters change
+    const updateUrlParams = useCallback((filter: string, search: string, area: string, sort: SortOption) => {
+        const params = new URLSearchParams();
+        if (filter) params.set("category", filter);
+        if (search) params.set("q", search);
+        if (area) params.set("area", area);
+        if (sort !== "relevance") params.set("sort", sort);
+        const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+        router.replace(newUrl, { scroll: false });
+    }, [router]);
+
+    useEffect(() => {
+        // Handle initial hash routing
+        if (window.location.hash === "#gems") {
+            setActiveFilter("gems");
+        }
+
+        const timeout = setTimeout(() => {
+            updateUrlParams(activeFilter, searchQuery, areaFilter, sortBy);
+        }, 300); // Debounce URL updates
+        return () => clearTimeout(timeout);
+    }, [activeFilter, searchQuery, areaFilter, sortBy, updateUrlParams]);
 
     const activeTypes = activeFilter || types;
 
@@ -82,7 +171,7 @@ export function PlaceGrid({
         queryFn: ({ pageParam }) => fetchPlaces(activeTypes, searchQuery, pageParam, areaFilter),
         initialPageParam: 0,
         initialData: initialQueryData,
-        staleTime: 5000, // 5 seconds of freshness
+        staleTime: 5000,
         getNextPageParam: (lastPage, allPages) => {
             const currentCount = allPages.reduce((acc, page) => acc + page.places.length, 0);
             if (currentCount < lastPage.total) {
@@ -92,7 +181,8 @@ export function PlaceGrid({
         },
     });
 
-    const allPlaces = data?.pages.flatMap(page => page.places) || [];
+    const rawPlaces = data?.pages.flatMap(page => page.places) || [];
+    const allPlaces = sortPlaces(rawPlaces, sortBy);
     const totalCount = data?.pages[0]?.total || 0;
 
     return (
@@ -102,9 +192,6 @@ export function PlaceGrid({
                 <h1 className="text-2xl font-black tracking-tight uppercase">
                     {title}
                 </h1>
-                <button className="p-2.5 bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-200/30 active:scale-90 transition-transform">
-                    <Filter className="w-4 h-4 text-gray-500" />
-                </button>
             </div>
 
             <div className="sticky top-0 z-30 bg-[#FAFAF8]/90 backdrop-blur-xl pb-3 pt-2 -mx-1 px-2 space-y-4">
@@ -121,10 +208,41 @@ export function PlaceGrid({
                         />
                     </div>
                     
-                    {/* Placeholder Sort Control */}
-                    <button className="flex items-center justify-center shrink-0 w-[52px] h-[52px] bg-white rounded-2xl border border-gray-200 shadow-sm text-gray-600 hover:text-[#1A1612] transition-colors active:scale-95">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
-                    </button>
+                    {/* Sort Control */}
+                    <div className="relative">
+                        <button 
+                            onClick={() => setShowSortMenu(!showSortMenu)}
+                            className={`flex items-center justify-center shrink-0 w-[52px] h-[52px] rounded-2xl border shadow-sm transition-all active:scale-95 ${
+                                sortBy !== "relevance" 
+                                    ? "bg-[#1A1612] border-[#1A1612] text-[#C9973B]" 
+                                    : "bg-white border-gray-200 text-gray-600 hover:text-[#1A1612]"
+                            }`}
+                            aria-label="Sort options"
+                        >
+                            <ArrowUpDown className="w-[18px] h-[18px]" />
+                        </button>
+                        
+                        {/* Sort dropdown */}
+                        {showSortMenu && (
+                            <>
+                                <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
+                                <div className="absolute right-0 top-14 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 w-48 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    {SORT_OPTIONS.map(option => (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => { setSortBy(option.value); setShowSortMenu(false); }}
+                                            className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors ${
+                                                sortBy === option.value ? "text-[#C9973B] font-black" : "text-gray-700 font-semibold"
+                                            }`}
+                                        >
+                                            <span className="text-xs uppercase tracking-wider">{option.label}</span>
+                                            {sortBy === option.value && <Check className="w-4 h-4 text-[#C9973B]" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 {/* Filter chips */}
@@ -187,6 +305,12 @@ export function PlaceGrid({
                         <p className="text-gray-400 text-sm mt-1">
                             {tr("grid", "errorSub")}
                         </p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="mt-6 text-[10px] font-black uppercase tracking-widest bg-[#1A1612] text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition"
+                        >
+                            Retry
+                        </button>
                     </div>
                 ) : allPlaces.length === 0 ? (
                     <div className="text-center py-20 bg-[#FAFAF8] rounded-[2rem] border border-[#C9973B]/20 shadow-inner">
@@ -200,7 +324,7 @@ export function PlaceGrid({
                             {tr("grid", "noResultsSub")}
                         </p>
                         <button 
-                            onClick={() => { setSearchQuery(""); setActiveFilter(""); }}
+                            onClick={() => { setSearchQuery(""); setActiveFilter(""); setAreaFilter(""); setSortBy("relevance"); }}
                             className="mt-6 text-[10px] font-black uppercase tracking-widest bg-[#1A1612] text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition"
                         >
                             {tr("grid", "clearFilters")}
@@ -210,6 +334,14 @@ export function PlaceGrid({
                     <>
                         <div className="flex justify-between items-center mb-2 px-1">
                             <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{totalCount} {tr("grid", "found")}</span>
+                            {sortBy !== "relevance" && (
+                                <button 
+                                    onClick={() => setSortBy("relevance")} 
+                                    className="text-[10px] font-black text-[#C9973B] uppercase tracking-widest hover:underline"
+                                >
+                                    Clear Sort
+                                </button>
+                            )}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {allPlaces.map((place) => (
@@ -232,6 +364,7 @@ export function PlaceGrid({
                             verificationScore={place.verificationScore}
                             reviewCount={place._count?.reviews}
                             hasRealPhotos={place.images?.some(img => img.imageTruthType === 'place_real' && img.status !== 'REJECTED' && img.status !== 'BLOCKED' && img.status !== 'FAILED')}
+                            isGem={(place as any).isGem}
                         />
                     ))}
                     </div>

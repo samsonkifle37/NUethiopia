@@ -32,7 +32,8 @@ export async function POST(request: Request) {
 
     // 1. Upload to Supabase Storage
     const buffer = Buffer.from(await image.arrayBuffer());
-    const fileName = `${Date.now()}-${image.name.replace(/\s+/g, '-')}`;
+    const safeName = image.name.replace(/[^\w.-]/g, '_').replace(/_+/g, '_');
+    const fileName = `${Date.now()}-${safeName || 'upload.jpg'}`;
     const path = `discovery/${fileName}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage

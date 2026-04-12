@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MapPin, Star, ExternalLink, ShieldCheck } from "lucide-react";
+import { MapPin, Star, ExternalLink, ShieldCheck, Sparkles } from "lucide-react";
 import { VerifiedImage } from "@/components/media/VerifiedImage";
 import { ActionButtonGroup } from "@/components/ActionButtonGroup";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -27,6 +27,7 @@ interface PlaceCardProps {
     ownerVerified?: boolean;
     featured?: boolean;
     hasRealPhotos?: boolean;
+    isGem?: boolean;
 }
 
 export function PlaceCard({
@@ -48,6 +49,7 @@ export function PlaceCard({
     ownerVerified = false,
     featured = false,
     hasRealPhotos = false,
+    isGem = false,
 }: PlaceCardProps) {
     const { formatPrice, currency } = useCurrency();
     const { tr } = useLanguage();
@@ -64,7 +66,7 @@ export function PlaceCard({
 
     return (
         <Link
-            href={`/place/${slug}`}
+            href={isGem ? `/discover/${slug}` : `/place/${slug}`}
             className="block bg-white rounded-[2rem] shadow-xl shadow-gray-200/40 overflow-hidden border border-gray-50 active:scale-[0.98] transition-all duration-300 group"
         >
             <div className="relative overflow-hidden h-52 group/image">
@@ -85,6 +87,12 @@ export function PlaceCard({
                     >
                         {type}
                     </span>
+                    
+                    {isGem && (
+                        <span className="bg-orange-500 text-white text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full shadow-md flex items-center gap-1.5">
+                            <Sparkles className="w-2.5 h-2.5" /> GEM
+                        </span>
+                    )}
                     
                     {featured && (
                         <span className="bg-[#C9973B]/90 text-white text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full backdrop-blur-sm w-fit flex items-center gap-1 shadow-md">
